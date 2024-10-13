@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<RootNamespace>TruckLib.Sii</RootNamespace>
+		<Authors>skzk</Authors>
+		<Version>0.1.0.0</Version>
+		<Title>TruckLib.Sii</Title>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/sk-zk/TruckLib.Sii</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Sprache" Version="2.3.1" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\TruckLib.Core\TruckLib.Core\TruckLib.Core.csproj" />
+  </ItemGroup>
+
+</Project>
