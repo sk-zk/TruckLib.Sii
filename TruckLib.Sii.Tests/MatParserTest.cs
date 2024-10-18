@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TruckLib.Sii;
 
-namespace TruckLibTests.TruckLib.Sii
+namespace TruckLib.Sii.Tests
 {
     public class MatParserTest
     {

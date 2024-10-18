@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using TruckLib;
 using TruckLib.Sii;
 
-namespace TruckLibTests.TruckLib.Sii
+namespace TruckLib.Sii.Tests
 {
     public class SiiParserTest
     {
