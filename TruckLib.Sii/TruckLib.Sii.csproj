@@ -12,6 +12,8 @@
 		<RepositoryUrl>https://github.com/sk-zk/TruckLib.Sii</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<Description>Readers for Prism3D .sii and .mat files</Description>
+		<PackageProjectUrl>https://github.com/sk-zk/TruckLib/</PackageProjectUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
