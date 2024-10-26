@@ -54,7 +54,7 @@ namespace TruckLib.Sii
         /// Opens a SII file.
         /// </summary>
         /// <param name="path">The path of the file.</param>
-        /// <param name="fs">The file system to load <c>@include</c>d files from.</param>
+        /// <param name="fs">The file system to load this file and <c>@include</c>d files from.</param>
         /// <returns>A <see>SiiFile</see> object.</returns>
         public static SiiFile Open(string path, IFileSystem fs) =>
             SiiParser.DeserializeFromFile(path, fs);
@@ -62,7 +62,7 @@ namespace TruckLib.Sii
         /// <summary>
         /// Serializes this object to a string.
         /// </summary>
-        /// <param name="indentation">The indentation inside units.</param>
+        /// <param name="indentation">The string used as indentation inside units.</param>
         public string Serialize(string indentation = "\t") =>
             SiiParser.Serialize(this, indentation);
 
@@ -70,7 +70,7 @@ namespace TruckLib.Sii
         /// Serializes this object and writes it to a file.
         /// </summary>
         /// <param name="path">The output path.</param>
-        /// <param name="indentation">The indentation inside units.</param>
+        /// <param name="indentation">The string used as indentation inside units.</param>
         public void Save(string path, string indentation = "\t") =>
             SiiParser.Save(this, path, indentation);
     }

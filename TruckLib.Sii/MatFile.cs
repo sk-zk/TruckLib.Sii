@@ -45,6 +45,7 @@ namespace TruckLib.Sii
         /// Opens a .mat file.
         /// </summary>
         /// <param name="path">The path of the file.</param>
+        /// <param name="fs">The file system to load the file from.</param>
         /// <returns>A MatFile object.</returns>
         public static MatFile Open(string path, IFileSystem fs) =>
             MatParser.DeserializeFromFile(path, fs);
