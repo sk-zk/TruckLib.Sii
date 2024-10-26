@@ -38,8 +38,8 @@ namespace TruckLib.Sii
             return matFile;
         }
 
-        public static MatFile DeserializeFromFile(string path) =>
-            DeserializeFromString(File.ReadAllText(path));
+        public static MatFile DeserializeFromFile(string path, IFileSystem fs) =>
+            DeserializeFromString(fs.ReadAllText(path));
 
         public static string Serialize(MatFile matFile, string indentation = "\t")
         {

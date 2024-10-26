@@ -25,12 +25,23 @@ namespace TruckLib.Sii
 
         private static readonly Dictionary<string, int> arrInsertIndex = [];
 
+        public static SiiFile DeserializeFromFile(string path, IFileSystem fs)
+        {
+            var siiPath = Path.GetDirectoryName(path);
+            return DeserializeFromString(path, siiPath, fs);
+        }
+
         public static SiiFile DeserializeFromString(string sii, string siiPath = "")
+        {
+            return DeserializeFromString(sii, siiPath, new DiskFileSystem());
+        }
+
+        public static SiiFile DeserializeFromString(string sii, string siiPath, IFileSystem fs)
         {
             var siiFile = new SiiFile();
 
             sii = RemoveComments(sii);
-            sii = InsertIncludes(sii, siiPath);
+            sii = InsertIncludes(sii, siiPath, fs);
 
             var firstPassUnits = ParserElements.Sii.Parse(sii);
             foreach (var firstPassUnit in firstPassUnits)
@@ -55,7 +66,7 @@ namespace TruckLib.Sii
             return secondPass;
         }
 
-        private static string InsertIncludes(string sii, string siiPath)
+        private static string InsertIncludes(string sii, string siiPath, IFileSystem fs)
         {
             var output = new StringBuilder();
 
@@ -74,10 +85,12 @@ namespace TruckLib.Sii
                     {
                         var path = match.Groups[1].Value;
                         path = Path.Combine(siiPath, path);
-                        if (!File.Exists(path))
+                        if (!fs.FileExists(path))
+                        {
                             throw new FileNotFoundException("Included file was not found.", path);
+                        }
 
-                        var fileContents = File.ReadAllText(path);
+                        var fileContents = fs.ReadAllText(path);
                         fileContents = RemoveComments(fileContents);
                         output.AppendLine(fileContents);
                     }
@@ -86,9 +99,6 @@ namespace TruckLib.Sii
 
             return output.ToString();
         }
-
-        public static SiiFile DeserializeFromFile(string path) =>
-            DeserializeFromString(File.ReadAllText(path), Path.GetDirectoryName(path));
 
         private static string RemoveComments(string sii) =>
             Regex.Replace(sii,

@@ -28,7 +28,19 @@ namespace TruckLib.Sii
         /// have <c>@include</c>s.</param>
         /// <returns>A SiiFile object.</returns>
         public static SiiFile Load(string sii, string siiDirectory = "") =>
-            SiiParser.DeserializeFromString(sii, siiDirectory);
+            Load(sii, siiDirectory, new DiskFileSystem());
+
+        /// <summary>
+        /// Deserializes a SII file.
+        /// </summary>
+        /// <param name="sii">The string containing the SII file.</param>
+        /// <param name="siiDirectory">The path of the directory in which the SII file is located.
+        /// Required for inserting <c>@include</c>s. Can be omitted if the file is known not to
+        /// have <c>@include</c>s.</param>
+        /// <param name="fs">The file system to load <c>@include</c>d files from.</param>
+        /// <returns>A <see>SiiFile</see> object.</returns>
+        public static SiiFile Load(string sii, string siiDirectory, IFileSystem fs) =>
+            SiiParser.DeserializeFromString(sii, siiDirectory, fs);
 
         /// <summary>
         /// Opens a SII file.
@@ -36,7 +48,16 @@ namespace TruckLib.Sii
         /// <param name="path">The path of the file.</param>
         /// <returns>A SiiFile object.</returns>
         public static SiiFile Open(string path) =>
-            SiiParser.DeserializeFromFile(path);
+            Open(path, new DiskFileSystem());
+
+        /// <summary>
+        /// Opens a SII file.
+        /// </summary>
+        /// <param name="path">The path of the file.</param>
+        /// <param name="fs">The file system to load <c>@include</c>d files from.</param>
+        /// <returns>A <see>SiiFile</see> object.</returns>
+        public static SiiFile Open(string path, IFileSystem fs) =>
+            SiiParser.DeserializeFromFile(path, fs);
 
         /// <summary>
         /// Serializes this object to a string.

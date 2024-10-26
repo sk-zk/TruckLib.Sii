@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace TruckLib.Sii
 {
@@ -38,7 +39,15 @@ namespace TruckLib.Sii
         /// <param name="path">The path of the file.</param>
         /// <returns>A MatFile object.</returns>
         public static MatFile Open(string path) =>
-            MatParser.DeserializeFromFile(path);
+            Open(path, new DiskFileSystem());
+
+        /// <summary>
+        /// Opens a .mat file.
+        /// </summary>
+        /// <param name="path">The path of the file.</param>
+        /// <returns>A MatFile object.</returns>
+        public static MatFile Open(string path, IFileSystem fs) =>
+            MatParser.DeserializeFromFile(path, fs);
 
         /// <summary>
         /// Serializes this object to a string.
