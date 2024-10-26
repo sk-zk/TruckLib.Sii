@@ -63,7 +63,7 @@ namespace TruckLib.Sii
         /// </summary>
         /// <param name="path">The output path.</param>
         /// <param name="indentation">The string which will be used as one level of indentation.</param>
-        public void Serialize(string path, string indentation = "\t") =>
+        public void Save(string path, string indentation = "\t") =>
             MatParser.Serialize(this, path, indentation);
     }
 }
