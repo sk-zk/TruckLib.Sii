@@ -47,7 +47,7 @@ namespace TruckLib.Sii
 
             sb.AppendLine($"effect : \"{matFile.Effect}\" {{");
 
-            ParserElements.SerializeAttributes(sb, matFile.Attributes, indentation);
+            ParserElements.SerializeAttributes(sb, matFile.Attributes, indentation, true);
             foreach (var texture in matFile.Textures)
             {
                 sb.AppendLine($"{indentation}texture: \"{texture.Name}\" {{");
