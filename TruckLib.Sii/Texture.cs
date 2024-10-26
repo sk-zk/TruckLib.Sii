@@ -13,6 +13,6 @@ namespace TruckLib.Sii
     {
         public string Name { get; set; }
 
-        public Dictionary<string, dynamic> Attributes { get; set; } = new();
+        public Dictionary<string, dynamic> Attributes { get; set; } = [];
     }
 }

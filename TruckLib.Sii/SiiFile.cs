@@ -12,7 +12,7 @@ namespace TruckLib.Sii
         /// <summary>
         /// Units in this file.
         /// </summary>
-        public List<Unit> Units { get; set; } = new List<Unit>();
+        public List<Unit> Units { get; set; } = [];
 
         /// <summary>
         /// Instantiates an empty SII file.

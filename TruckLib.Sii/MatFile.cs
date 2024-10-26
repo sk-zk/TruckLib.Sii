@@ -17,13 +17,12 @@ namespace TruckLib.Sii
         /// <summary>
         /// Attributes of the shader.
         /// </summary>
-        public Dictionary<string, dynamic> Attributes { get; set; }
-            = new Dictionary<string, dynamic>();
+        public Dictionary<string, dynamic> Attributes { get; set; } = [];
 
         /// <summary>
         /// Textures of the shader.
         /// </summary>
-        public List<Texture> Textures { get; set; } = new List<Texture>();
+        public List<Texture> Textures { get; set; } = [];
 
         /// <summary>
         /// Deserializes a .mat file.

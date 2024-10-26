@@ -65,7 +65,5 @@ namespace TruckLib.Sii
             var str = Serialize(matFile, indentation);
             File.WriteAllText(path, str);
         }
-
-    }
-    
+    } 
 }

@@ -23,7 +23,7 @@ namespace TruckLib.Sii
         /// </summary>
         private static readonly bool OverrideOnDuplicate = true;
 
-        private static readonly Dictionary<string, int> arrInsertIndex = new();
+        private static readonly Dictionary<string, int> arrInsertIndex = [];
 
         public static SiiFile DeserializeFromString(string sii, string siiPath = "")
         {
@@ -47,7 +47,7 @@ namespace TruckLib.Sii
             var secondPass = new Unit(firstPass.ClassName, firstPass.UnitName);
             foreach (var (key, value) in firstPass.Attributes)
             {
-                if (key.EndsWith("]"))
+                if (key.EndsWith(']'))
                     ParseListOrArrayAttribute(secondPass, key, value);
                 else
                     AddAttribute(secondPass, key, value);
@@ -115,8 +115,7 @@ namespace TruckLib.Sii
 
             var arrName = match.Groups[1].Value;
             var hasArrIndex = int.TryParse(match.Groups[2].Value, out int arrIndex);
-            if (!arrInsertIndex.ContainsKey(arrName))
-                arrInsertIndex.Add(arrName, 0);
+            arrInsertIndex.TryAdd(arrName, 0);
 
             // figure out if this is a fixed-length array entry or a list entry
             // and create the thing if it doesn't exist yet

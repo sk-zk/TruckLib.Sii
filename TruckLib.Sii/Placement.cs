@@ -11,7 +11,7 @@ namespace TruckLib.Sii
     /// Represents the placement type used in SII files.
     /// </summary>
     /// <remarks>I don't know what this does, beyond that it's apparently being used for
-    ///  Winter Wonderland portals, so the property names are a complete guess.</remarks>
+    /// Winter Wonderland portals, so the property names are a complete guess.</remarks>
     public struct Placement
     {
         public Vector3 Position { get; set; }
