@@ -25,11 +25,6 @@ namespace TruckLib.Sii
 
         private static readonly Dictionary<string, int> arrInsertIndex = [];
 
-        public static SiiFile DeserializeFromFile(string path, IFileSystem fs)
-        {
-            var siiPath = Path.GetDirectoryName(path);
-            return DeserializeFromString(path, siiPath, fs);
-        }
 
         public static SiiFile DeserializeFromString(string sii, string siiPath = "")
         {
@@ -38,6 +33,8 @@ namespace TruckLib.Sii
 
         public static SiiFile DeserializeFromString(string sii, string siiPath, IFileSystem fs)
         {
+            sii = Utils.TrimByteOrderMark(sii);
+
             var siiFile = new SiiFile();
 
             sii = RemoveComments(sii);
@@ -84,13 +81,13 @@ namespace TruckLib.Sii
                     if (match.Groups.Count > 0)
                     {
                         var path = match.Groups[1].Value;
-                        path = Path.Combine(siiPath, path);
+                        path = siiPath + "/" + path;
                         if (!fs.FileExists(path))
                         {
                             throw new FileNotFoundException("Included file was not found.", path);
                         }
-
                         var fileContents = fs.ReadAllText(path);
+                        fileContents = Utils.TrimByteOrderMark(fileContents);
                         fileContents = RemoveComments(fileContents);
                         output.AppendLine(fileContents);
                     }

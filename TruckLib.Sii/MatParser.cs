@@ -13,6 +13,8 @@ namespace TruckLib.Sii
     {
         public static MatFile DeserializeFromString(string mat)
         {
+            mat = Utils.TrimByteOrderMark(mat);
+
             var firstPass = ParserElements.Mat.Parse(mat);
 
             var matFile = new MatFile { Effect = firstPass.UnitName };
