@@ -25,20 +25,21 @@ namespace TruckLib.Sii
 
         private static readonly Dictionary<string, int> arrInsertIndex = [];
 
-
-        public static SiiFile DeserializeFromString(string sii, string siiPath = "")
+        public static SiiFile DeserializeFromString(string sii, string siiPath = "", 
+            bool ignoreMissingIncludes = false)
         {
-            return DeserializeFromString(sii, siiPath, new DiskFileSystem());
+            return DeserializeFromString(sii, siiPath, new DiskFileSystem(), ignoreMissingIncludes);
         }
 
-        public static SiiFile DeserializeFromString(string sii, string siiPath, IFileSystem fs)
+        public static SiiFile DeserializeFromString(string sii, string siiPath, IFileSystem fs,
+            bool ignoreMissingIncludes)
         {
             sii = Utils.TrimByteOrderMark(sii);
 
             var siiFile = new SiiFile();
 
             sii = RemoveComments(sii);
-            sii = InsertIncludes(sii, siiPath, fs);
+            sii = InsertIncludes(sii, siiPath, fs, ignoreMissingIncludes);
 
             var firstPassUnits = ParserElements.Sii.Parse(sii);
             foreach (var firstPassUnit in firstPassUnits)
@@ -63,7 +64,7 @@ namespace TruckLib.Sii
             return secondPass;
         }
 
-        private static string InsertIncludes(string sii, string siiPath, IFileSystem fs)
+        private static string InsertIncludes(string sii, string siiPath, IFileSystem fs, bool ignoreMissingIncludes)
         {
             var output = new StringBuilder();
 
@@ -82,7 +83,7 @@ namespace TruckLib.Sii
                     {
                         var path = match.Groups[1].Value;
                         path = siiPath + "/" + path;
-                        if (!fs.FileExists(path))
+                        if (!fs.FileExists(path) && !ignoreMissingIncludes)
                         {
                             throw new FileNotFoundException("Included file was not found.", path);
                         }
