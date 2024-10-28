@@ -101,12 +101,12 @@ namespace TruckLib.Sii
             if (magic == "ScsC")
             {
                 var decrypted = EncryptedSii.Decrypt(sii);
-                return Load(decrypted, siiDirectory, fs);
+                return Load(decrypted, siiDirectory, fs, ignoreMissingIncludes);
             }
             else if (magic.StartsWith("3nK"))
             {
                 var decoded = ThreeNK.Decode(sii);
-                return Load(decoded, siiDirectory, fs);
+                return Load(decoded, siiDirectory, fs, ignoreMissingIncludes);
             }
             else
             {
