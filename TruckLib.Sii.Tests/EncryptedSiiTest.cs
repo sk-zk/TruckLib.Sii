@@ -23,13 +23,5 @@ namespace TruckLib.Sii.Tests
             var actual = EncryptedSii.Decrypt(encrypted);
             Assert.Equal(unencrypted, actual);
         }
-
-        [Fact]
-        public void Encrypt()
-        {
-            var encrypted = EncryptedSii.Encrypt(unencrypted);
-            var redecrypted = EncryptedSii.Decrypt(encrypted);
-            Assert.Equal(unencrypted, redecrypted);
-        }
     }
 }

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace TruckLib.Sii
 {
     /// <summary>
-    /// Functions for decrypting or encrypting SII files.
+    /// Functions for decrypting SII files.
     /// </summary>
     public static class EncryptedSii
     {
@@ -55,40 +55,6 @@ namespace TruckLib.Sii
             return decrypted;
         }
 
-        /// <summary>
-        /// Encrypts a SII file.
-        /// </summary>
-        /// <param name="sii">The buffer containing the SII file.</param>
-        /// <returns>The encrypted SII file.</returns>
-        public static byte[] Encrypt(byte[] sii)
-        {
-            var plaintext = Compress(sii);
-
-            using var aes = Aes.Create();
-            aes.KeySize = 256;
-            aes.Key = siiKey;
-            aes.GenerateIV();
-            var ciphertext = aes.EncryptCbc(plaintext, aes.IV);
-
-            var hmacGen = new HMACSHA256();
-            hmacGen.Key = siiKey;
-            var hash = hmacGen.ComputeHash(ciphertext);
-
-            using var ms = new MemoryStream();
-            using var w = new BinaryWriter(ms);
-            var header = new EncryptedSiiHeader
-            {
-                Hmac = hash,
-                IV = aes.IV,
-                DataSize = (uint)sii.Length
-            };
-            header.Serialize(w);
-
-            w.Write(ciphertext);
-
-            return ms.ToArray();
-        }
-
         private static byte[] Decompress(byte[] input)
         {
             using var inMs = new MemoryStream(input);
@@ -97,17 +63,6 @@ namespace TruckLib.Sii
             zlibStream.CopyTo(outMs);
             var decompressed = outMs.ToArray();
             return decompressed;
-        }
-
-        private static byte[] Compress(byte[] input)
-        {
-            using var inMs = new MemoryStream(input);
-            using var outMs = new MemoryStream();
-            using var zlibStream = new ZLibStream(outMs, CompressionLevel.Optimal);
-            inMs.CopyTo(zlibStream);
-            zlibStream.Flush();
-            var compressed = outMs.ToArray();
-            return compressed;
         }
     }
 }
