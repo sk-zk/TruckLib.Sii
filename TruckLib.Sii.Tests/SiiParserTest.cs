@@ -247,5 +247,17 @@ foo : .bar
             Assert.IsType<OwnerPointer>(sii.Units[0].Attributes["hello"]);
             Assert.Equal(".42ptr", sii.Units[0].Attributes["hello"]);
         }
+
+        [Fact]
+        public void ClassNameWithDoubleColon()
+        {
+            var siiStr = @"SiiNunit { 
+                ui::window:test {
+                    hello : 123
+                } 
+            }";
+            var sii = SiiParser.DeserializeFromString(siiStr);
+            Assert.Equal("ui::window", sii.Units[0].Class);
+        }
     }
 }

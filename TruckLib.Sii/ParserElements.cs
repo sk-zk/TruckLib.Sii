@@ -211,6 +211,9 @@ namespace TruckLib.Sii
         internal static readonly Parser<IEnumerable<char>> Colon =
             Parse.Char(':').Once().Token();
 
+        internal static readonly Parser<IEnumerable<IEnumerable<char>>> DoubleColon =
+            Parse.String("::").Once().Token();
+
         internal static readonly Parser<string> Key =
             Parse.AnyChar.Except(Colon).Except(Parse.WhiteSpace).AtLeastOnce().Text().Token();
 
@@ -252,13 +255,21 @@ namespace TruckLib.Sii
             .Except(Colon).Except(Parse.WhiteSpace)
             .AtLeastOnce().Text().Token();
 
+        internal static readonly Parser<string> ClassNameWithNamespace =
+            from p1 in Parse.AnyChar.Except(Parse.WhiteSpace).Except(DoubleColon)
+                .AtLeastOnce().Token().Text()
+            from _ in DoubleColon
+            from p2 in Parse.AnyChar.Except(Parse.WhiteSpace).Except(Colon)
+                .AtLeastOnce().Token().Text()
+            select p1 + "::" + p2;
+
         internal static readonly Parser<string> UnitName =
             Parse.AnyChar
             .Except(OpenCurly).Except(Parse.WhiteSpace)
             .AtLeastOnce().Text().Token();
 
         internal static readonly Parser<UnitHeader> SiiUnitHeader =
-            from c in ClassName
+            from c in ClassNameWithNamespace.Or(ClassName)
             from _ in Colon
             from u in UnitName
             select new UnitHeader(c, u);
