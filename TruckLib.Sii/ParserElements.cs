@@ -222,17 +222,21 @@ namespace TruckLib.Sii
             from v in Value
             select new KeyValuePair<string, dynamic>(k, v);
 
-        internal static readonly Parser<string> ClassName =
-        Parse.AnyChar.Except(Colon).Except(Parse.WhiteSpace).AtLeastOnce().Text().Token();
-
-        internal static readonly Parser<string> UnitName =
-        Parse.AnyChar.Except(Parse.WhiteSpace).AtLeastOnce().Text().Token();
-
         internal static readonly Parser<char> OpenCurly =
             Parse.Char('{').Token();
 
         internal static readonly Parser<char> CloseCurly =
             Parse.Char('}').Token();
+
+        internal static readonly Parser<string> ClassName =
+            Parse.AnyChar
+            .Except(Colon).Except(Parse.WhiteSpace)
+            .AtLeastOnce().Text().Token();
+
+        internal static readonly Parser<string> UnitName =
+            Parse.AnyChar
+            .Except(OpenCurly).Except(Parse.WhiteSpace)
+            .AtLeastOnce().Text().Token();
 
         internal static readonly Parser<UnitHeader> SiiUnitHeader =
             from c in ClassName
