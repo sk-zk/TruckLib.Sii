@@ -206,5 +206,19 @@ foo : .bar
             var sii = SiiParser.DeserializeFromString(siiStr);
             Assert.Equal(0xBEEF, sii.Units[0].Attributes["hello"]);
         }
+
+        [Fact]
+        public void ParseFloatWithFSuffix()
+        {
+            var siiStr = @"SiiNunit { 
+                foo : bar {
+                    hello : 4.2f
+                    there : 4.2
+                } 
+            }";
+            var sii = SiiParser.DeserializeFromString(siiStr);
+            Assert.Equal(4.2f, sii.Units[0].Attributes["hello"]);
+            Assert.Equal(4.2f, sii.Units[0].Attributes["there"]);
+        }
     }
 }

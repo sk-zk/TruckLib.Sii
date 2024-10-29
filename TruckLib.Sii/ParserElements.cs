@@ -55,6 +55,7 @@ namespace TruckLib.Sii
             from s in Sign
             from n in Parse.DecimalInvariant
             from e in ExponentPart.Optional()
+            from _ in Parse.Char('f').Optional()
             select (dynamic)float.Parse(
                 (s.IsDefined ? s.Get() : "") + 
                 n + 
