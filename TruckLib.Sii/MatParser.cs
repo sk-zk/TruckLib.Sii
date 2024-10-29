@@ -1,7 +1,9 @@
 ﻿using Sprache;
 using System;
 using System.Collections.Generic;
+using System.Formats.Tar;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -19,25 +21,62 @@ namespace TruckLib.Sii
 
             var matFile = new MatFile { Effect = firstPass.UnitName };
 
+            var (secondPass, textures) = SecondPass(firstPass);
+            matFile.Attributes = secondPass.Attributes;
+            matFile.Textures = textures;
+            return matFile;
+        }
+
+        private static (Unit, List<Texture>) SecondPass(FirstPassUnit firstPass)
+        {
+            Dictionary<string, int> arrInsertIndex = [];
+            List<Texture> textures = [];
+
+            var secondPass = new Unit(firstPass.ClassName, firstPass.UnitName);
             foreach (var (key, value) in firstPass.Attributes)
             {
-                if (value is FirstPassUnit unit)
+                if (key.EndsWith(']'))
                 {
-                    var attribDict = unit.Attributes
-                        .ToDictionary(k => k.Key, v => v.Value);
-                    matFile.Textures.Add(new Texture()
-                    {
-                        Name = unit.UnitName,
-                        Attributes = attribDict
-                    });
-                } 
+                    SiiMatUtils.ParseListOrArrayAttribute(secondPass, key, value, 
+                        arrInsertIndex, false);
+                }
                 else
                 {
-                    matFile.Attributes.Add(key, value);
+                    if (key == "texture" && value is FirstPassUnit fp)
+                    {
+                        var (sp, _) = SecondPass(fp);
+                        textures.Add(new Texture()
+                        {
+                            Name = sp.Name,
+                            Attributes = sp.Attributes,
+                        });
+                        secondPass.Attributes.Remove("texture");
+                    } 
+                    else
+                    {
+                        SiiMatUtils.AddAttribute(secondPass, key, value, false);
+                    }
                 }
             }
 
-            return matFile;
+            // convert legacy mat
+            if (secondPass.Attributes.ContainsKey("texture") 
+                && secondPass.Attributes.ContainsKey("texture_name"))
+            {
+                var legacyTextures = secondPass.Attributes["texture"];
+                var legacyTextureNames = secondPass.Attributes["texture_name"];
+                for (int i = 0; i < legacyTextures.Length; i++)
+                {
+                    var texture = new Texture();
+                    texture.Name = legacyTextureNames[i];
+                    texture.Attributes.Add("source", legacyTextures[i]);
+                    textures.Add(texture);
+                }
+                secondPass.Attributes.Remove("texture");
+                secondPass.Attributes.Remove("texture_name");
+            }
+
+            return (secondPass, textures);
         }
 
         public static MatFile DeserializeFromFile(string path, IFileSystem fs) =>
@@ -53,7 +92,8 @@ namespace TruckLib.Sii
             foreach (var texture in matFile.Textures)
             {
                 sb.AppendLine($"{indentation}texture: \"{texture.Name}\" {{");
-                ParserElements.SerializeAttributes(sb, texture.Attributes, indentation + indentation, true);
+                ParserElements.SerializeAttributes(sb, texture.Attributes, 
+                    indentation + indentation, true);
                 sb.AppendLine($"{indentation}}}");
             }
 

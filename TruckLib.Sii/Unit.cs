@@ -24,8 +24,7 @@ namespace TruckLib.Sii
         /// <summary>
         /// Attributes of this unit.
         /// </summary>
-        public Dictionary<string, dynamic> Attributes { get; set; } 
-            = new Dictionary<string, dynamic>();
+        public Dictionary<string, dynamic> Attributes { get; set; } = [];
 
         public override string ToString() => $"{Class} : {Name}";
 

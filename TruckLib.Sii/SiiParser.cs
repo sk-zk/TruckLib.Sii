@@ -23,8 +23,6 @@ namespace TruckLib.Sii
         /// </summary>
         private static readonly bool OverrideOnDuplicate = true;
 
-        private static readonly Dictionary<string, int> arrInsertIndex = [];
-
         public static SiiFile DeserializeFromString(string sii, string siiPath = "", 
             bool ignoreMissingIncludes = false)
         {
@@ -44,24 +42,10 @@ namespace TruckLib.Sii
             var firstPassUnits = ParserElements.Sii.Parse(sii);
             foreach (var firstPassUnit in firstPassUnits)
             {
-                siiFile.Units.Add(SecondPass(firstPassUnit));
+                siiFile.Units.Add(SecondPass(firstPassUnit, OverrideOnDuplicate));
             }
 
             return siiFile;
-        }
-
-        private static Unit SecondPass(FirstPassUnit firstPass)
-        {
-            arrInsertIndex.Clear();
-            var secondPass = new Unit(firstPass.ClassName, firstPass.UnitName);
-            foreach (var (key, value) in firstPass.Attributes)
-            {
-                if (key.EndsWith(']'))
-                    ParseListOrArrayAttribute(secondPass, key, value);
-                else
-                    AddAttribute(secondPass, key, value);
-            }
-            return secondPass;
         }
 
         private static string InsertIncludes(string sii, string siiPath, IFileSystem fs, bool ignoreMissingIncludes)
@@ -79,19 +63,35 @@ namespace TruckLib.Sii
                 else
                 {
                     var match = Regex.Match(line, @"@include ""(.*)""");
-                    if (match.Groups.Count > 0)
+                    if (match.Groups.Count < 1)
                     {
-                        var path = match.Groups[1].Value;
+                        continue;
+                    }
+                    var path = match.Groups[1].Value;
+                    
+                    // make relative paths absolute.
+                    // the check is necessary because absolute paths in @include directives
+                    // are not guaranteed to start with a slash
+                    if (!fs.FileExists(path))
+                    {
                         path = siiPath + "/" + path;
-                        if (!fs.FileExists(path) && !ignoreMissingIncludes)
+                    }
+
+                    if (!fs.FileExists(path))
+                    {
+                        if (ignoreMissingIncludes)
+                        {
+                            continue;
+                        }
+                        else
                         {
                             throw new FileNotFoundException("Included file was not found.", path);
                         }
-                        var fileContents = fs.ReadAllText(path);
-                        fileContents = Utils.TrimByteOrderMark(fileContents);
-                        fileContents = RemoveComments(fileContents);
-                        output.AppendLine(fileContents);
                     }
+                    var fileContents = fs.ReadAllText(path);
+                    fileContents = Utils.TrimByteOrderMark(fileContents);
+                    fileContents = RemoveComments(fileContents);
+                    output.AppendLine(fileContents);
                 }
             }
 
@@ -107,84 +107,22 @@ namespace TruckLib.Sii
                 "",
                 RegexOptions.Singleline);
 
-        private static void AddAttribute(Unit unit, string name, dynamic value)
+        private static Unit SecondPass(FirstPassUnit firstPass, bool overrideOnDuplicate)
         {
-            if (unit.Attributes.ContainsKey(name) && OverrideOnDuplicate)
-                unit.Attributes[name] = value;
-            else
-                unit.Attributes.Add(name, value);
-        }
-
-        private static void ParseListOrArrayAttribute(Unit unit, string name, dynamic value)
-        {
-            var match = Regex.Match(name, @"^(.+)\[(.*)\]$");
-            if (!match.Success)
-                throw new ArgumentException();
-
-            var arrName = match.Groups[1].Value;
-            var hasArrIndex = int.TryParse(match.Groups[2].Value, out int arrIndex);
-            arrInsertIndex.TryAdd(arrName, 0);
-
-            // figure out if this is a fixed-length array entry or a list entry
-            // and create the thing if it doesn't exist yet
-            bool isFixedLengthArray;
-            if (unit.Attributes.TryGetValue(arrName, out var whatsAllThisThen))
+            Dictionary<string, int> arrInsertIndex = [];
+            var secondPass = new Unit(firstPass.ClassName, firstPass.UnitName);
+            foreach (var (key, value) in firstPass.Attributes)
             {
-                isFixedLengthArray = whatsAllThisThen is int or Array;
-            } 
-            else
-            {
-                isFixedLengthArray = hasArrIndex;
-                if (isFixedLengthArray)
+                if (key.EndsWith(']'))
                 {
-                    int initSize = arrIndex + 1;
-                    var arr = new dynamic[initSize];
-                    AddAttribute(unit, arrName, arr);
-                } 
-                else
-                {
-                    AddAttribute(unit, arrName, new List<dynamic>());
-                }
-            }
-
-            // insert the value
-            if (isFixedLengthArray)
-            {
-                var val = unit.Attributes[arrName];
-                dynamic[] arr;
-                if (val is int)
-                {
-                    // existing val is int => it's a fixed-length array
-                    // where the length has been read in, and now we need to
-                    // create the actual array
-                    arr = new dynamic[val];
-                    unit.Attributes[arrName] = arr;
+                    SiiMatUtils.ParseListOrArrayAttribute(secondPass, key, value, arrInsertIndex, overrideOnDuplicate);
                 }
                 else
                 {
-                    arr = val;
+                    SiiMatUtils.AddAttribute(secondPass, key, value, overrideOnDuplicate);
                 }
-
-                if (arr.Length < arrIndex + 1)
-                {
-                    Array.Resize(ref arr, arrIndex + 1);
-                    unit.Attributes[arrName] = arr;
-                }
-
-                if (hasArrIndex)
-                {
-                    arrInsertIndex[arrName] = arrIndex + 1; 
-                }
-                else
-                {
-                    arrIndex = arrInsertIndex[arrName]++;
-                }
-                arr[arrIndex] = value;
             }
-            else
-            {
-                unit.Attributes[arrName].Add(value);
-            }
+            return secondPass;
         }
 
         public static void Save(SiiFile siiFile, string path, string indentation = "\t")
