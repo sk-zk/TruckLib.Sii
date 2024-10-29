@@ -182,5 +182,13 @@ foo : .bar
 ";
             Assert.Equal(expected.Replace("\r", ""), actual.Replace("\r", ""));
         }
+
+        [Fact]
+        public void CanHandleMissingWhitespaceBetweenUnitNameAndCurly()
+        {
+            var siiStr = "SiiNunit { dont_throw:onthis{ hello:123 } }";
+            var sii = SiiParser.DeserializeFromString(siiStr);
+            Assert.Equal(123, sii.Units[0].Attributes["hello"]);
+        }
     }
 }
