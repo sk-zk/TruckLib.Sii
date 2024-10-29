@@ -184,11 +184,27 @@ foo : .bar
         }
 
         [Fact]
-        public void CanHandleMissingWhitespaceBetweenUnitNameAndCurly()
+        public void MissingWhitespaceBetweenUnitNameAndCurly()
         {
-            var siiStr = "SiiNunit { dont_throw:onthis{ hello:123 } }";
+            var siiStr = @"SiiNunit { 
+                dont_throw:onthis{ 
+                    hello:123 
+                } 
+            }";
             var sii = SiiParser.DeserializeFromString(siiStr);
             Assert.Equal(123, sii.Units[0].Attributes["hello"]);
+        }
+
+        [Fact]
+        public void ParseHexInt()
+        {
+            var siiStr = @"SiiNunit { 
+                foo : bar {
+                    hello : 0xBEEF 
+                } 
+            }";
+            var sii = SiiParser.DeserializeFromString(siiStr);
+            Assert.Equal(0xBEEF, sii.Units[0].Attributes["hello"]);
         }
     }
 }

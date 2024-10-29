@@ -112,15 +112,23 @@ namespace TruckLib.Sii
             from n in Parse.Chars("0123456789").AtLeastOnce().Text()
             select ParseInt(s.GetOrElse(' ') + n);
 
+        internal static readonly Parser<dynamic> HexInteger =
+            from h in Parse.String("0x").Token().Text()
+            from n in Parse.Chars("0123456789ABCDEFabcdef").AtLeastOnce().Text()
+            select ParseHexInt(n);
+
+        internal static readonly Parser<dynamic> IntegerOrHexInteger =
+            HexInteger.Or(Integer);
+
         internal static readonly Parser<dynamic> IndividualInteger =
             from _ in Parse.Chars(" \t").Many()
-            from n in Integer
+            from n in IntegerOrHexInteger
             from __ in Parse.Chars(" \t").Many()
             from ___ in Parse.LineTerminator
             select n;
 
         internal static readonly Parser<dynamic> IntegerTupleValue =
-            from n in Integer
+            from n in IntegerOrHexInteger
             from _ in Parse.Char(TupleSeparatorChar).Optional().Token()
             select n;
 
@@ -282,23 +290,27 @@ namespace TruckLib.Sii
 
         internal static readonly Parser<FirstPassUnit> Mat = MatUnit.Select(x => x);
 
-        internal static dynamic ParseInt(string n)
+        internal static dynamic ParseInt(string n, NumberStyles numberStyles = NumberStyles.Integer)
         {
             var culture = CultureInfo.InvariantCulture;
-            if (int.TryParse(n, NumberStyles.Integer, culture, out int intResult))
+
+            if (int.TryParse(n, numberStyles, culture, out int intResult))
             {
                 return intResult;
             }
-            if (long.TryParse(n, NumberStyles.Integer, culture, out long longResult))
+            if (long.TryParse(n, numberStyles, culture, out long longResult))
             {
                 return longResult;
             }
-            if (ulong.TryParse(n, NumberStyles.Integer, culture, out ulong ulongResult))
+            if (ulong.TryParse(n, numberStyles, culture, out ulong ulongResult))
             {
                 return ulongResult;
             }
             throw new ArgumentException("Unable to parse", nameof(n));
         }
+
+        internal static dynamic ParseHexInt(string n) => 
+            ParseInt(n, NumberStyles.HexNumber);
 
         internal static void SerializeAttributes(StringBuilder sb, Dictionary<string, dynamic> attributes, 
             string indentation, bool isMat = false)
