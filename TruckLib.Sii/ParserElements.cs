@@ -51,15 +51,25 @@ namespace TruckLib.Sii
             from d in Parse.Numeric.AtLeastOnce().Text()
             select "e" + (s.IsDefined ? s.Get() : "") + d;
 
+        internal static readonly Parser<string> FloatWithLeadingDigits =
+            from d1 in Parse.Digit.AtLeastOnce().Text()
+            from d2 in DotAndFractionalDigits.Optional()
+            select d1 + d2.GetOrDefault();
+
+        internal static readonly Parser<string> DotAndFractionalDigits =
+            from dot in Parse.Char('.').Once().Token()
+            from d in Parse.Digit.AtLeastOnce().Text()
+            select '.' + d;
+
         internal static readonly Parser<dynamic> Float =
             from s in Sign
-            from n in Parse.DecimalInvariant
+            from n in FloatWithLeadingDigits.Token()
             from e in ExponentPart.Optional()
             from _ in Parse.Char('f').Optional()
             select (dynamic)float.Parse(
-                (s.IsDefined ? s.Get() : "") + 
-                n + 
-                (e.IsDefined ? e.Get() : ""),
+                s.GetOrElse(' ') + 
+                n +
+                e.GetOrDefault(),
                 CultureInfo.InvariantCulture);
 
         internal static readonly Parser<dynamic> FloatInHexNotation =

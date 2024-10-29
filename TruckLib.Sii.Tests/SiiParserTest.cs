@@ -234,5 +234,18 @@ foo : .bar
             Assert.Equal("missing", sii.Units[0].Attributes["hello"]);
             Assert.Equal("not missing", sii.Units[0].Attributes["there"]);
         }
+
+        [Fact]
+        public void ParseOwnerPtrStartingWithNumber()
+        {
+            var siiStr = @"SiiNunit { 
+                foo : bar {
+                    hello : .42ptr
+                } 
+            }";
+            var sii = SiiParser.DeserializeFromString(siiStr);
+            Assert.IsType<OwnerPointer>(sii.Units[0].Attributes["hello"]);
+            Assert.Equal(".42ptr", sii.Units[0].Attributes["hello"]);
+        }
     }
 }
