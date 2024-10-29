@@ -220,5 +220,19 @@ foo : .bar
             Assert.Equal(4.2f, sii.Units[0].Attributes["hello"]);
             Assert.Equal(4.2f, sii.Units[0].Attributes["there"]);
         }
+
+        [Fact]
+        public void ParseStringWithMissingEndQuote()
+        {
+            var siiStr = @"SiiNunit { 
+                foo : bar {
+                    hello : ""missing
+                    there: ""not missing""
+                } 
+            }";
+            var sii = SiiParser.DeserializeFromString(siiStr);
+            Assert.Equal("missing", sii.Units[0].Attributes["hello"]);
+            Assert.Equal("not missing", sii.Units[0].Attributes["there"]);
+        }
     }
 }

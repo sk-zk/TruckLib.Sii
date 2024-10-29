@@ -34,7 +34,7 @@ namespace TruckLib.Sii
             select (dynamic)new Token(t);
 
         internal static readonly Parser<IEnumerable<char>> StringDelimiter =
-            Parse.Char(StringDelimiterChar).Once().Token();
+            Parse.Char(StringDelimiterChar).Once().Token().Or(Parse.LineTerminator);
 
         internal static readonly Parser<dynamic> DelimitedString =
             from _ in StringDelimiter
