@@ -38,7 +38,7 @@ namespace TruckLib.Sii
                 if (key.EndsWith(']'))
                 {
                     SiiMatUtils.ParseListOrArrayAttribute(secondPass, key, value, 
-                        arrInsertIndex, false);
+                        arrInsertIndex, true);
                 }
                 else
                 {
@@ -54,7 +54,7 @@ namespace TruckLib.Sii
                     } 
                     else
                     {
-                        SiiMatUtils.AddAttribute(secondPass, key, value, false);
+                        SiiMatUtils.AddAttribute(secondPass, key, value, true);
                     }
                 }
             }
