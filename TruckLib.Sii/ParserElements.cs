@@ -57,13 +57,13 @@ namespace TruckLib.Sii
             select d1 + d2.GetOrDefault();
 
         internal static readonly Parser<string> DotAndFractionalDigits =
-            from dot in Parse.Char('.').Once().Token()
-            from d in Parse.Digit.AtLeastOnce().Text()
+            from dot in Parse.Char('.').Once()
+            from d in Parse.Chars("0123456789").AtLeastOnce().Text()
             select '.' + d;
 
         internal static readonly Parser<dynamic> Float =
             from s in Sign
-            from n in FloatWithLeadingDigits.Token()
+            from n in FloatWithLeadingDigits
             from e in ExponentPart.Optional()
             from _ in Parse.Char('f').Optional()
             select (dynamic)float.Parse(
