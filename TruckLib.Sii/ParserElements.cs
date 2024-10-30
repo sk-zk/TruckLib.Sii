@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-[assembly: InternalsVisibleTo("TruckLibTests")]
+[assembly: InternalsVisibleTo("Dbg")]
 namespace TruckLib.Sii
 {
     internal static class ParserElements
@@ -71,6 +71,13 @@ namespace TruckLib.Sii
                 n +
                 e.GetOrDefault(),
                 CultureInfo.InvariantCulture);
+
+        internal static readonly Parser<dynamic> IndividualFloat =
+            from _ in Parse.Chars(" \t").Many()
+            from n in Float
+            from __ in Parse.Chars(" \t").Many()
+            from ___ in Parse.LineTerminator
+            select n;
 
         internal static readonly Parser<dynamic> FloatInHexNotation =
             from _ in Parse.Char('&')
@@ -229,7 +236,7 @@ namespace TruckLib.Sii
                 .Or(Quaternion)
                 .Or(QuaternionWithSemicolon)
                 .Or(IndividualInteger)
-                .Or(Float)
+                .Or(IndividualFloat)
                 .Or(FloatInHexNotation)
                 .Or(DelimitedString)
                 .Or(Boolean)
