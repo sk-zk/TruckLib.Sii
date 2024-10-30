@@ -65,12 +65,26 @@ namespace TruckLib.Sii
             {
                 var legacyTextures = secondPass.Attributes["texture"];
                 var legacyTextureNames = secondPass.Attributes["texture_name"];
-                for (int i = 0; i < legacyTextures.Length; i++)
+                if (legacyTextures is string)
                 {
                     var texture = new Texture();
-                    texture.Name = legacyTextureNames[i];
-                    texture.Attributes.Add("source", legacyTextures[i]);
+                    texture.Name = legacyTextureNames;
+                    texture.Attributes.Add("source", legacyTextures);
                     textures.Add(texture);
+                }
+                else if (legacyTextures is object[])
+                {
+                    for (int i = 0; i < legacyTextures.Length; i++)
+                    {
+                        var texture = new Texture();
+                        texture.Name = legacyTextureNames[i];
+                        texture.Attributes.Add("source", legacyTextures[i]);
+                        textures.Add(texture);
+                    }
+                }
+                else
+                {
+                    throw new NotSupportedException();
                 }
                 secondPass.Attributes.Remove("texture");
                 secondPass.Attributes.Remove("texture_name");
