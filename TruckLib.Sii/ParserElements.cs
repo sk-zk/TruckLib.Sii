@@ -125,6 +125,15 @@ namespace TruckLib.Sii
             from __ in Parse.Char(MatTupleCloseChar).Token()
             select (dynamic)new Vector3(x, y, z);
 
+        internal static readonly Parser<dynamic> MatFloatVector4 =
+            from _ in Parse.Char(MatTupleOpenChar).Token()
+            from x in FloatTupleValue
+            from y in FloatTupleValue
+            from z in FloatTupleValue
+            from a in FloatTupleValue
+            from __ in Parse.Char(MatTupleCloseChar).Token()
+            select (dynamic)new Vector4(x, y, z, a);
+
         internal static readonly Parser<dynamic> Integer =
             from s in Sign
             from n in Parse.Chars("0123456789").AtLeastOnce().Text()
@@ -233,6 +242,7 @@ namespace TruckLib.Sii
                 .Or(FloatVector3)
                 .Or(MatFloatVector2)
                 .Or(MatFloatVector3)
+                .Or(MatFloatVector4)
                 .Or(Quaternion)
                 .Or(QuaternionWithSemicolon)
                 .Or(IndividualInteger)
