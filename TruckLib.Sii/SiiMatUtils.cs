@@ -86,7 +86,14 @@ namespace TruckLib.Sii
                 {
                     arrIndex = arrInsertIndex[arrName]++;
                 }
-                arr[arrIndex] = value;
+                if (arr.Length <= arrIndex)
+                {
+                    MiscExtensions.Push(arr, value);
+                } 
+                else
+                {
+                    arr[arrIndex] = value;
+                }
             }
             else
             {
