@@ -259,5 +259,18 @@ foo : .bar
             var sii = SiiParser.DeserializeFromString(siiStr);
             Assert.Equal("ui::window", sii.Units[0].Class);
         }
+
+        [Fact]
+        public void FloatWithDotButNoFractionalDigits()
+        {
+            var siiStr = @"SiiNunit { 
+                foo : bar {
+                    hello : 727.
+                } 
+            }";
+            var sii = SiiParser.DeserializeFromString(siiStr);
+            Assert.IsType<float>(sii.Units[0].Attributes["hello"]);
+            Assert.Equal(727f, sii.Units[0].Attributes["hello"]);
+        }
     }
 }

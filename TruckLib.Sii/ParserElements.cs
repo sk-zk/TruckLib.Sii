@@ -58,7 +58,7 @@ namespace TruckLib.Sii
 
         internal static readonly Parser<string> DotAndFractionalDigits =
             from dot in Parse.Char('.').Once()
-            from d in Parse.Chars("0123456789").AtLeastOnce().Text()
+            from d in Parse.Chars("0123456789").Many().Text()
             select '.' + d;
 
         internal static readonly Parser<dynamic> Float =
