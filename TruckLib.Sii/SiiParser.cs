@@ -91,6 +91,7 @@ namespace TruckLib.Sii
                     var fileContents = fs.ReadAllText(path);
                     fileContents = Utils.TrimByteOrderMark(fileContents);
                     fileContents = RemoveComments(fileContents);
+                    fileContents = InsertIncludes(fileContents, siiPath, fs, ignoreMissingIncludes);
                     output.AppendLine(fileContents);
                 }
             }

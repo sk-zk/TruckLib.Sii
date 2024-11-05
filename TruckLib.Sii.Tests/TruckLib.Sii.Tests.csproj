@@ -45,6 +45,9 @@
     <None Update="Data\mat_current.mat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Data\nested.sui">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\sample.sii">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

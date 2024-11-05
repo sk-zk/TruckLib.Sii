@@ -140,6 +140,7 @@ namespace TruckLib.Sii.Tests
             Assert.Equal(2, file.Units.Count);
             Assert.Equal(".baz", file.Units[0].Name);
             Assert.Equal(2, file.Units[1].Attributes["b"]);
+            Assert.Equal("hello", file.Units[1].Attributes["hello_from_nested"]);
         }
 
         [Fact]
