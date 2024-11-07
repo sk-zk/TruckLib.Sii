@@ -152,6 +152,31 @@ namespace TruckLib.Sii
         }
 
         /// <summary>
+        /// Decodes a 3nK-encoded or encrypted SII file to its regular text form.
+        /// </summary>
+        /// <param name="sii">The SII file to decode.</param>
+        /// <returns>The decoded SII file. If the input was already in text form
+        /// or is unsupported, it is returned unchanged.</returns>
+        public static byte[] Decode(byte[] sii)
+        {
+            var magic = Encoding.ASCII.GetString(sii[0..4]);
+            if (magic == "ScsC")
+            {
+                var decrypted = EncryptedSii.Decrypt(sii);
+                return Decode(decrypted);
+            }
+            else if (magic.StartsWith("3nK"))
+            {
+                var decoded = ThreeNK.Decode(sii);
+                return Decode(decoded);
+            }
+            else
+            {
+                return sii;
+            }
+        }
+
+        /// <summary>
         /// Serializes this object to a string.
         /// </summary>
         /// <param name="indentation">The string used as indentation inside units.</param>
