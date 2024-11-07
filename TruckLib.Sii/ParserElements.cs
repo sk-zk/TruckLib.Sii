@@ -305,7 +305,7 @@ namespace TruckLib.Sii
             from header in Parse.String(SiiHeader).Token()
             from oc in OpenCurly
             from u in SiiUnits
-            from cc in CloseCurly
+            from cc in CloseCurly.Optional()
             select u;
 
         internal static readonly Parser<UnitHeader> MatUnitHeader =
