@@ -273,5 +273,17 @@ foo : .bar
             Assert.IsType<float>(sii.Units[0].Attributes["hello"]);
             Assert.Equal(727f, sii.Units[0].Attributes["hello"]);
         }
+
+        [Fact]
+        public void ArrayIndexWithSpaceAfterKeyName()
+        {
+            var siiStr = @"SiiNunit { 
+                foo : bar {
+                    hawk [2]: ""ah""
+                } 
+            }";
+            var sii = SiiParser.DeserializeFromString(siiStr);
+            Assert.Equal("ah", sii.Units[0].Attributes["hawk"][2]);
+        }
     }
 }

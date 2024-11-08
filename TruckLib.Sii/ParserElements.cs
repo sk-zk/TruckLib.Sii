@@ -230,8 +230,20 @@ namespace TruckLib.Sii
         internal static readonly Parser<IEnumerable<IEnumerable<char>>> DoubleColon =
             Parse.String("::").Once().Token();
 
+        internal static readonly Parser<string> KeyText =
+            Parse.AnyChar.Except(Colon).Except(Parse.WhiteSpace).Except(Parse.Char('['))
+                .AtLeastOnce().Text().Token();
+
+        internal static readonly Parser<string> KeyArrayIndex =
+            from _ in Parse.Char('[').Token()
+            from val in Parse.Chars("0123456789").Many().Text()
+            from __ in Parse.Char(']').Token()
+            select $"[{val}]";
+
         internal static readonly Parser<string> Key =
-            Parse.AnyChar.Except(Colon).Except(Parse.WhiteSpace).AtLeastOnce().Text().Token();
+            from t in KeyText.Token()
+            from i in KeyArrayIndex.Text().Token().Optional()
+            select t + i.GetOrElse("");
 
         internal static readonly Parser<dynamic> Value =
             from v in Placement
