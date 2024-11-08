@@ -70,9 +70,9 @@ namespace TruckLib.Sii
                     texture.Attributes.Add("source", legacyTextures);
                     textures.Add(texture);
                 }
-                else if (legacyTextures is object[])
+                else if (legacyTextures is IList<object> list)
                 {
-                    for (int i = 0; i < legacyTextures.Length; i++)
+                    for (int i = 0; i < list.Count; i++)
                     {
                         var texture = new Texture();
                         texture.Name = legacyTextureNames[i];

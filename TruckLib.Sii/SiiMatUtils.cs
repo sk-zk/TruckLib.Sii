@@ -97,7 +97,21 @@ namespace TruckLib.Sii
             }
             else
             {
-                unit.Attributes[arrName].Add(value);
+                // handle weird edge case where an array is accidentally
+                // defined like this:
+                //     foo: "bar"
+                //     ... other stuff ...
+                //     foo[1]: "baz"
+                if (unit.Attributes[arrName] is not List<dynamic> or Array)
+                {
+                    var old = unit.Attributes[arrName];
+                    unit.Attributes[arrName] = new dynamic[] { old };
+                    ParseListOrArrayAttribute(unit, name, value, arrInsertIndex, overrideOnDuplicate);
+                }
+                else
+                {
+                    unit.Attributes[arrName].Add(value);
+                }
             }
         }
     }

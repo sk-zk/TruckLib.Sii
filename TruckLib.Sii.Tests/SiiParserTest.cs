@@ -131,6 +131,33 @@ namespace TruckLib.Sii.Tests
                 file.Units[0].Attributes["b"].Rotation);
         }
 
+
+        [Fact]
+        public void ParseArrays()
+        {
+            var siiStr = @"SiiNunit { 
+                foo : bar {
+                    without_index[]: 0
+                    without_index[]: 1
+                    without_index[]: 2
+
+                    with_index[0]: 0
+                    with_index[1]: 1
+                    with_index[2]: 2
+                    with_index[4]: 4
+                } 
+            }";
+            var sii = SiiParser.DeserializeFromString(siiStr);
+            Assert.Equal(0, sii.Units[0].Attributes["without_index"][0]);
+            Assert.Equal(1, sii.Units[0].Attributes["without_index"][1]);
+            Assert.Equal(2, sii.Units[0].Attributes["without_index"][2]);
+            Assert.Equal(0, sii.Units[0].Attributes["with_index"][0]);
+            Assert.Equal(1, sii.Units[0].Attributes["with_index"][1]);
+            Assert.Equal(2, sii.Units[0].Attributes["with_index"][2]);
+            Assert.Equal(null, sii.Units[0].Attributes["with_index"][3]);
+            Assert.Equal(4, sii.Units[0].Attributes["with_index"][4]);
+        }
+
         [Fact]
         public void DeserializeIncludes()
         {
@@ -285,5 +312,20 @@ foo : .bar
             var sii = SiiParser.DeserializeFromString(siiStr);
             Assert.Equal("ah", sii.Units[0].Attributes["hawk"][2]);
         }
+
+        [Fact]
+        public void SurpriseItWasAnArrayThisWholeTime()
+        {
+            var siiStr = @"SiiNunit { 
+                foo : bar {
+                    hello: ""there""
+                    hello[2]: ""world""
+                } 
+            }";
+            var sii = SiiParser.DeserializeFromString(siiStr);
+            Assert.Equal("there", sii.Units[0].Attributes["hello"][0]);
+            Assert.Equal("world", sii.Units[0].Attributes["hello"][2]);
+        }
+
     }
 }
