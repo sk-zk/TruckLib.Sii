@@ -36,7 +36,7 @@ namespace TruckLib.Sii
 
             var siiFile = new SiiFile();
 
-            sii = RemoveComments(sii);
+            sii = SiiMatUtils.RemoveComments(sii);
             sii = InsertIncludes(sii, siiPath, fs, ignoreMissingIncludes);
 
             var firstPassUnits = ParserElements.Sii.Parse(sii);
@@ -90,7 +90,7 @@ namespace TruckLib.Sii
                     }
                     var fileContents = fs.ReadAllText(path);
                     fileContents = Utils.TrimByteOrderMark(fileContents);
-                    fileContents = RemoveComments(fileContents);
+                    fileContents = SiiMatUtils.RemoveComments(fileContents);
                     fileContents = InsertIncludes(fileContents, siiPath, fs, ignoreMissingIncludes);
                     output.AppendLine(fileContents);
                 }
@@ -98,15 +98,6 @@ namespace TruckLib.Sii
 
             return output.ToString();
         }
-
-        private static string RemoveComments(string sii) =>
-            Regex.Replace(sii,
-                // 🠋 remove C-style comments
-                //           🠋 remove # comments
-                //                      🠋 remove // comments
-                @"\/\*.*\*\/|#[^\n\r]*|\/\/[^\n\r]*",
-                "",
-                RegexOptions.Singleline);
 
         private static Unit SecondPass(FirstPassUnit firstPass, bool overrideOnDuplicate)
         {

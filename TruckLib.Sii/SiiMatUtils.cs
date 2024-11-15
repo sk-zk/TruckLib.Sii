@@ -7,8 +7,17 @@ using System.Threading.Tasks;
 
 namespace TruckLib.Sii
 {
-    internal class SiiMatUtils
+    internal partial class SiiMatUtils
     {
+        //                🠋 remove C-style comments
+        //                           🠋 remove # comments
+        //                                     🠋 remove // comments
+        [GeneratedRegex(@"\/\*.*\*\/|#[^\n\r]*|\/\/[^\n\r]*", RegexOptions.Singleline)]
+        private static partial Regex CommentFindingRegex();
+
+        public static string RemoveComments(string sii) =>
+            CommentFindingRegex().Replace(sii, "");
+
         internal static void AddAttribute(Unit unit, string name, dynamic value, bool overrideOnDuplicate)
         {
             if (unit.Attributes.ContainsKey(name) && overrideOnDuplicate)
