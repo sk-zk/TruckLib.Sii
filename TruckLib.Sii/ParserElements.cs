@@ -137,6 +137,7 @@ namespace TruckLib.Sii
         internal static readonly Parser<dynamic> Integer =
             from s in Sign
             from n in Parse.Chars("0123456789").AtLeastOnce().Text()
+            from _ in Parse.Not(Parse.Chars('.'))
             select ParseInt(s.GetOrElse(' ') + n);
 
         internal static readonly Parser<dynamic> HexInteger =
