@@ -37,5 +37,24 @@ namespace TruckLib.Sii.Tests
             Assert.Equal("/material/environment/vehicle_reflection.tobj", 
                 mat.Textures[2].Attributes["source"]);
         }
+
+        [Fact]
+        public void LegacyTextureSourceWithoutArrayIndex()
+        {
+            var matStr = @"material : ""eut2.sign"" {
+	                texture : ""road_ru_118.tobj""
+	                texture_name[0] : ""texture_base""
+	                diffuse : { 1 , 1 , 1 }
+	                specular : { 0 , 0 , 0 }
+	                shininess : 4
+	                add_ambient : 0
+                }";
+            var mat = MatParser.DeserializeFromString(matStr);
+
+            Assert.Single(mat.Textures);
+            Assert.Single(mat.Textures[0].Attributes);
+            Assert.Equal("texture_base", mat.Textures[0].Name);
+            Assert.Equal("road_ru_118.tobj", mat.Textures[0].Attributes["source"]);
+        }
     }
 }
