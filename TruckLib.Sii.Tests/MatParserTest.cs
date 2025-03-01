@@ -56,5 +56,25 @@ namespace TruckLib.Sii.Tests
             Assert.Equal("texture_base", mat.Textures[0].Name);
             Assert.Equal("road_ru_118.tobj", mat.Textures[0].Attributes["source"]);
         }
+
+        [Fact]
+        public void LegacyTextureNameWithoutArrayIndex()
+        {
+            var matStr = @"material : ""eut2.dif.spec"" {
+            	texture[0] : ""/model/road/road_gravel1.tobj""
+            	texture_name : ""texture_base""
+            	substance : ""road_dirt""
+            	aux[0] : { 3, 3 }
+            	
+            	specular : { 0.0, 0.0, 0.0 }
+            	shininess : 5
+            }";
+            var mat = MatParser.DeserializeFromString(matStr);
+
+            Assert.Single(mat.Textures);
+            Assert.Single(mat.Textures[0].Attributes);
+            Assert.Equal("texture_base", mat.Textures[0].Name);
+            Assert.Equal("/model/road/road_gravel1.tobj", mat.Textures[0].Attributes["source"]);
+        }
     }
 }
