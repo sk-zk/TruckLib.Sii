@@ -337,7 +337,7 @@ namespace TruckLib.Sii
             from h in MatUnitHeader.Token()
             from _ in OpenCurly
             from p in MatUnitElement.Many()
-            from __ in CloseCurly
+            from __ in CloseCurly.Optional()
             select new FirstPassUnit(h.ClassName, h.UnitName, p.ToList());
 
         internal static readonly Parser<FirstPassUnit> Mat = MatUnit.Select(x => x);

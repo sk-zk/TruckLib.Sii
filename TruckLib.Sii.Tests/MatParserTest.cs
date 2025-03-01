@@ -101,5 +101,24 @@ namespace TruckLib.Sii.Tests
             Assert.Equal("texture_base", mat.Textures[1].Name);
             Assert.Equal("/material/environment/vehicle_reflection.tobj", mat.Textures[1].Attributes["source"]);
         }
+
+        [Fact]
+        public void NoClosingCurly()
+        {
+            var matStr = @"effect : ""eut2.dif.spec.mult.dif.iamod.dif.add.env.tsnmap.rfx"" {
+                diffuse : { 1.000000 , 1.000000 , 1.000000 }
+                specular : { 0.380056 , 0.380056 , 0.380056 }
+                texture : ""texture_base"" {
+                    source : ""/asset/prefab/depots/offshore_shipyard/tx_container02_red.tobj""
+                    sampler : default
+                }";
+            var mat = MatParser.DeserializeFromString(matStr);
+
+            Assert.Single(mat.Textures);
+            Assert.Equal(new Vector3(0.380056f, 0.380056f, 0.380056f), mat.Attributes["specular"]);
+            Assert.Equal("texture_base", mat.Textures[0].Name);
+            Assert.Equal("/asset/prefab/depots/offshore_shipyard/tx_container02_red.tobj", 
+                mat.Textures[0].Attributes["source"]);
+        }
     }
 }
