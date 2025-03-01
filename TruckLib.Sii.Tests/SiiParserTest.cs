@@ -327,6 +327,7 @@ foo : .bar
             Assert.Equal("world", sii.Units[0].Attributes["hello"][2]);
         }
 
+        [Fact]
         public void VeryLargeFloat()
         {
             var siiStr = @"SiiNunit { 
@@ -335,8 +336,8 @@ foo : .bar
                 } 
             }";
             var sii = SiiParser.DeserializeFromString(siiStr);
-            Assert.IsType<float>(sii.Units[0].Attributes["hello"]);
-            Assert.Equal(340282346638528859811704183484516925440f, sii.Units[0].Attributes["hello"]);
+            Assert.IsType<float>(sii.Units[0].Attributes["lv_limit"]);
+            Assert.Equal(340282346638528859811704183484516925440f, sii.Units[0].Attributes["lv_limit"]);
         }
 
     }
