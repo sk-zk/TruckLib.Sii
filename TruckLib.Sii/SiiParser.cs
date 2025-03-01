@@ -37,7 +37,7 @@ namespace TruckLib.Sii
             var siiFile = new SiiFile();
 
             sii = SiiMatUtils.RemoveComments(sii);
-            sii = InsertIncludes(sii, siiPath, fs, ignoreMissingIncludes);
+            (sii, siiFile.Includes) = InsertIncludes(sii, siiPath, fs, ignoreMissingIncludes);
 
             var firstPassUnits = ParserElements.Sii.Parse(sii);
             foreach (var firstPassUnit in firstPassUnits)
@@ -48,9 +48,11 @@ namespace TruckLib.Sii
             return siiFile;
         }
 
-        private static string InsertIncludes(string sii, string siiPath, IFileSystem fs, bool ignoreMissingIncludes)
+        private static (string sii, List<string> includes) InsertIncludes(string sii, string siiPath, 
+            IFileSystem fs, bool ignoreMissingIncludes)
         {
             var output = new StringBuilder();
+            var includes = new List<string>();
 
             using var reader = new StringReader(sii);
             string line;
@@ -76,6 +78,7 @@ namespace TruckLib.Sii
                     {
                         path = siiPath + "/" + path;
                     }
+                    includes.Add(path);
 
                     if (!fs.FileExists(path))
                     {
@@ -91,12 +94,13 @@ namespace TruckLib.Sii
                     var fileContents = fs.ReadAllText(path);
                     fileContents = Utils.TrimByteOrderMark(fileContents);
                     fileContents = SiiMatUtils.RemoveComments(fileContents);
-                    fileContents = InsertIncludes(fileContents, siiPath, fs, ignoreMissingIncludes);
+                    (fileContents, var innerIncludes) = InsertIncludes(fileContents, siiPath, fs, ignoreMissingIncludes);
+                    includes.AddRange(innerIncludes);
                     output.AppendLine(fileContents);
                 }
             }
 
-            return output.ToString();
+            return (output.ToString(), includes);
         }
 
         private static Unit SecondPass(FirstPassUnit firstPass, bool overrideOnDuplicate)

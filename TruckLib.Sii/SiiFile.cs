@@ -7,7 +7,7 @@ using System.Text;
 namespace TruckLib.Sii
 {
     /// <summary>
-    /// Represents an SII file.
+    /// Represents a SII file.
     /// </summary>
     public class SiiFile
     {
@@ -22,6 +22,11 @@ namespace TruckLib.Sii
         /// Instantiates an empty SII file.
         /// </summary>
         public SiiFile() { }
+
+        /// <summary>
+        /// The paths of files which were referenced by a <c>@include</c> directive.
+        /// </summary>
+        public List<string> Includes { get; internal set; }
 
         /// <summary>
         /// Deserializes a SII file.

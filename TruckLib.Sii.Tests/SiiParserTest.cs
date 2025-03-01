@@ -168,6 +168,7 @@ namespace TruckLib.Sii.Tests
             Assert.Equal(".baz", file.Units[0].Name);
             Assert.Equal(2, file.Units[1].Attributes["b"]);
             Assert.Equal("hello", file.Units[1].Attributes["hello_from_nested"]);
+            Assert.Equal(["Data/included1.sui", "Data/included2.sui", "Data/nested.sui"], file.Includes);
         }
 
         [Fact]
