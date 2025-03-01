@@ -42,12 +42,12 @@ namespace TruckLib.Sii.Tests
         public void LegacyTextureSourceWithoutArrayIndex()
         {
             var matStr = @"material : ""eut2.sign"" {
-	                texture : ""road_ru_118.tobj""
-	                texture_name[0] : ""texture_base""
-	                diffuse : { 1 , 1 , 1 }
-	                specular : { 0 , 0 , 0 }
-	                shininess : 4
-	                add_ambient : 0
+                    texture : ""road_ru_118.tobj""
+                    texture_name[0] : ""texture_base""
+                    diffuse : { 1 , 1 , 1 }
+                    specular : { 0 , 0 , 0 }
+                    shininess : 4
+                    add_ambient : 0
                 }";
             var mat = MatParser.DeserializeFromString(matStr);
 
@@ -61,13 +61,13 @@ namespace TruckLib.Sii.Tests
         public void LegacyTextureNameWithoutArrayIndex()
         {
             var matStr = @"material : ""eut2.dif.spec"" {
-            	texture[0] : ""/model/road/road_gravel1.tobj""
-            	texture_name : ""texture_base""
-            	substance : ""road_dirt""
-            	aux[0] : { 3, 3 }
-            	
-            	specular : { 0.0, 0.0, 0.0 }
-            	shininess : 5
+                texture[0] : ""/model/road/road_gravel1.tobj""
+                texture_name : ""texture_base""
+                substance : ""road_dirt""
+                aux[0] : { 3, 3 }
+                
+                specular : { 0.0, 0.0, 0.0 }
+                shininess : 5
             }";
             var mat = MatParser.DeserializeFromString(matStr);
 
@@ -75,6 +75,31 @@ namespace TruckLib.Sii.Tests
             Assert.Single(mat.Textures[0].Attributes);
             Assert.Equal("texture_base", mat.Textures[0].Name);
             Assert.Equal("/model/road/road_gravel1.tobj", mat.Textures[0].Attributes["source"]);
+        }
+
+        [Fact]
+        public void LegacyTextureSourceWithoutName()
+        {
+            var matStr = @"material : ""eut2.dif.spec"" {
+                texture[0] : ""wa-tm_ks_lep.tobj""
+                texture_name[0] : ""texture_base""
+                texture[1] : ""/material/environment/vehicle_reflection.tobj""
+                ambient : { 0.400000 , 0.400000 , 0.400000 }
+                diffuse : { 0.400000 , 0.400000 , 0.400000 }
+                specular : { 0.0 , 0.0 , 0.0 }
+                tint : { 1.000000 , 1.000000 , 1.000000 }
+                env_factor : { 0.6 , 0.6 , 0.6 }
+                shininess : 100
+                add_ambient : 0
+                reflection : 0
+            }";
+            var mat = MatParser.DeserializeFromString(matStr);
+
+            Assert.Equal(2, mat.Textures.Count);
+            Assert.Equal("texture_base", mat.Textures[0].Name);
+            Assert.Equal("wa-tm_ks_lep.tobj", mat.Textures[0].Attributes["source"]);
+            Assert.Equal("texture_base", mat.Textures[1].Name);
+            Assert.Equal("/material/environment/vehicle_reflection.tobj", mat.Textures[1].Attributes["source"]);
         }
     }
 }
