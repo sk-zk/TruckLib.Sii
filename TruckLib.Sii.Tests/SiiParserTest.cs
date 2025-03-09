@@ -154,7 +154,7 @@ namespace TruckLib.Sii.Tests
             Assert.Equal(0, sii.Units[0].Attributes["with_index"][0]);
             Assert.Equal(1, sii.Units[0].Attributes["with_index"][1]);
             Assert.Equal(2, sii.Units[0].Attributes["with_index"][2]);
-            Assert.Equal(null, sii.Units[0].Attributes["with_index"][3]);
+            Assert.Null(sii.Units[0].Attributes["with_index"][3]);
             Assert.Equal(4, sii.Units[0].Attributes["with_index"][4]);
         }
 
