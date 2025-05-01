@@ -15,8 +15,7 @@ curve_model : curve.ibe_1200i
     variation: 2
     start_part: 2 /* this is a c-style comment
     * which extends
-    * over many lines
-    * and contains /* stuff like */ this : aaa { } */
+    * over many lines */
     end_part: 2
     variation[0]: "v0 | center1 : 1.0"
     start_part[0]: "start1"

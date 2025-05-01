@@ -9,14 +9,93 @@ namespace TruckLib.Sii
 {
     internal partial class SiiMatUtils
     {
-        //                🠋 remove C-style comments
-        //                           🠋 remove # comments
-        //                                     🠋 remove // comments
-        [GeneratedRegex(@"\/\*.*\*\/|#[^\n\r]*|\/\/[^\n\r]*", RegexOptions.Singleline)]
-        private static partial Regex CommentFindingRegex();
+        public static string RemoveComments(string sii) 
+        {
+            var sb = new StringBuilder();
 
-        public static string RemoveComments(string sii) =>
-            CommentFindingRegex().Replace(sii, "");
+            int i;
+            for (i = 0; i < sii.Length; i++)
+            {
+                char c = sii[i];
+
+                // Skip quoted strings
+                if (c == '"')
+                {
+                    sb.Append(c);
+                    i++;
+                    for (; i < sii.Length - 1 && sii[i] != '"'; i++)
+                    {
+                        sb.Append(sii[i]);
+                    }
+                    sb.Append(c);
+                }
+                // Single-line comment with #
+                else if (c == '#')
+                {
+                    SkipUntil('\n');
+                    if (sii[i - 1] == '\r')
+                        sb.Append('\r');
+                    sb.Append('\n');
+                }
+                else if (c == '/')
+                {
+                    // Single-line comment with //
+                    if (Peek('/'))
+                    {
+                        SkipUntil('\n');
+                        if (sii[i - 1] == '\r')
+                            sb.Append('\r');
+                        sb.Append('\n');
+                    }
+                    // C-style multi-line comment
+                    else if (Peek('*'))
+                    {
+                        SkipUntilStr("*/");
+                    }
+                    else
+                    {
+                        sb.Append(c);
+                    }
+                }
+                else
+                {
+                    sb.Append(c);
+                }                    
+            }
+
+            return sb.ToString();
+
+            bool Peek(char c)
+            {
+                return i < sii.Length - 1 && sii[i + 1] == c;
+            }
+
+            void SkipUntil(char c)
+            {
+                for (; i < sii.Length - 1 && sii[i] != c; i++);
+            }
+
+            void SkipUntilStr(string s)
+            {
+                for (; i < sii.Length - 1; i++)
+                {
+                    if (Equals(s))
+                    {
+                        i += s.Length - 1;
+                        return;
+                    }
+                }
+            }
+
+            bool Equals(string s)
+            {
+                for (int j = 0; j < s.Length; j++)
+                {
+                    if (s[j] != sii[i + j]) return false;
+                }
+                return true;
+            }
+        }
 
         internal static void AddAttribute(Unit unit, string name, dynamic value, bool overrideOnDuplicate)
         {
@@ -30,10 +109,13 @@ namespace TruckLib.Sii
             }
         }
 
+        [GeneratedRegex(@"^(.+)\[(.*)\]$")]
+        internal static partial Regex ListOrArrayAttributePattern();
+
         internal static void ParseListOrArrayAttribute(Unit unit, string name, dynamic value,
             Dictionary<string, int> arrInsertIndex, bool overrideOnDuplicate)
         {
-            var match = Regex.Match(name, @"^(.+)\[(.*)\]$");
+            var match = ListOrArrayAttributePattern().Match(name);
             if (!match.Success)
                 throw new ArgumentException("Not an array entry attribute", nameof(name));
 
