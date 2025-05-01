@@ -30,13 +30,22 @@
     <None Update="Data\encrypted.sii">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\included1.sui">
+    <None Update="Data\SiiParserTest\NestedIncludesWithRelative\parent.sii">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\included2.sui">
+    <None Update="Data\SiiParserTest\NestedIncludesWithRelative\subdir1\included1.sui">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\includer.sii">
+    <None Update="Data\SiiParserTest\NestedIncludesWithRelative\subdir1\included2.sui">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\SiiParserTest\NestedIncludes\included1.sui">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\SiiParserTest\NestedIncludes\included2.sui">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\SiiParserTest\NestedIncludes\parent.sii">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\mat_legacy.mat">
@@ -45,7 +54,7 @@
     <None Update="Data\mat_current.mat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\nested.sui">
+    <None Update="Data\SiiParserTest\NestedIncludes\nested.sui">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\sample.sii">

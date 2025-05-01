@@ -26,7 +26,7 @@ namespace TruckLib.Sii
         /// <summary>
         /// The paths of files which were referenced by a <c>@include</c> directive.
         /// </summary>
-        public List<string> Includes { get; internal set; }
+        public HashSet<string> Includes { get; internal set; }
 
         /// <summary>
         /// Deserializes a SII file.

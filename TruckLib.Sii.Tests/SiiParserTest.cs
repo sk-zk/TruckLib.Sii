@@ -159,16 +159,27 @@ namespace TruckLib.Sii.Tests
         }
 
         [Fact]
-        public void DeserializeIncludes()
+        public void DeserializeNestedIncludes()
         {
-            var str = File.ReadAllText("Data/includer.sii");
-            var file = SiiParser.DeserializeFromString(str, "Data");
+            var str = File.ReadAllText("Data/SiiParserTest/NestedIncludes/parent.sii");
+            var file = SiiParser.DeserializeFromString(str, "Data/SiiParserTest/NestedIncludes");
 
             Assert.Equal(2, file.Units.Count);
             Assert.Equal(".baz", file.Units[0].Name);
             Assert.Equal(2, file.Units[1].Attributes["b"]);
             Assert.Equal("hello", file.Units[1].Attributes["hello_from_nested"]);
-            Assert.Equal(["Data/included1.sui", "Data/included2.sui", "Data/nested.sui"], file.Includes);
+            Assert.Equal(["Data/SiiParserTest/NestedIncludes/included1.sui", 
+                "Data/SiiParserTest/NestedIncludes/included2.sui",
+                "Data/SiiParserTest/NestedIncludes/nested.sui"], file.Includes);
+        }
+
+        [Fact]
+        public void DeserializeNestedIncludesWithRelative()
+        {
+            var str = File.ReadAllText("Data/SiiParserTest/NestedIncludesWithRelative/parent.sii");
+            var file = SiiParser.DeserializeFromString(str, "Data/SiiParserTest/NestedIncludesWithRelative");
+
+            Assert.Equal(2, file.Units[0].Attributes["b"]);
         }
 
         [Fact]

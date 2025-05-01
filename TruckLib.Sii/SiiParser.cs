@@ -48,11 +48,11 @@ namespace TruckLib.Sii
             return siiFile;
         }
 
-        private static (string sii, List<string> includes) InsertIncludes(string sii, string siiPath, 
+        private static (string sii, HashSet<string> includes) InsertIncludes(string sii, string siiPath, 
             IFileSystem fs, bool ignoreMissingIncludes)
         {
             var output = new StringBuilder();
-            var includes = new List<string>();
+            var includes = new HashSet<string>();
 
             using var reader = new StringReader(sii);
             string line;
@@ -69,18 +69,18 @@ namespace TruckLib.Sii
                     {
                         continue;
                     }
-                    var path = match.Groups[1].Value;
+                    var suiPath = match.Groups[1].Value;
                     
                     // make relative paths absolute.
                     // the check is necessary because absolute paths in @include directives
                     // are not guaranteed to start with a slash
-                    if (!fs.FileExists(path))
+                    if (!fs.FileExists(suiPath))
                     {
-                        path = siiPath + "/" + path;
+                        suiPath = siiPath + "/" + suiPath;
                     }
-                    includes.Add(path);
+                    includes.Add(suiPath);
 
-                    if (!fs.FileExists(path))
+                    if (!fs.FileExists(suiPath))
                     {
                         if (ignoreMissingIncludes)
                         {
@@ -88,14 +88,15 @@ namespace TruckLib.Sii
                         }
                         else
                         {
-                            throw new FileNotFoundException("Included file was not found.", path);
+                            throw new FileNotFoundException("Included file was not found.", suiPath);
                         }
                     }
-                    var fileContents = fs.ReadAllText(path);
+                    var fileContents = fs.ReadAllText(suiPath);
                     fileContents = Utils.TrimByteOrderMark(fileContents);
                     fileContents = SiiMatUtils.RemoveComments(fileContents);
-                    (fileContents, var innerIncludes) = InsertIncludes(fileContents, siiPath, fs, ignoreMissingIncludes);
-                    includes.AddRange(innerIncludes);
+                    var suiDir = suiPath[0 .. (suiPath.LastIndexOf('/'))];
+                    (fileContents, var innerIncludes) = InsertIncludes(fileContents, suiDir, fs, ignoreMissingIncludes);
+                    includes.UnionWith(innerIncludes);
                     output.AppendLine(fileContents);
                 }
             }

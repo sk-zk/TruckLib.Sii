@@ -1,7 +1,7 @@
 SiiNunit
 {
 
-@include "included1.sui";
+@include "included1.sui"
 
 foo : .bar {
 	a: 1
