@@ -48,7 +48,7 @@ namespace TruckLib.Sii
             return siiFile;
         }
 
-        private static (string sii, HashSet<string> includes) InsertIncludes(string sii, string siiPath, 
+        private static (string sii, HashSet<string> includes) InsertIncludes(string sii, string siiDir, 
             IFileSystem fs, bool ignoreMissingIncludes)
         {
             var output = new StringBuilder();
@@ -76,7 +76,7 @@ namespace TruckLib.Sii
                     // are not guaranteed to start with a slash
                     if (!fs.FileExists(suiPath))
                     {
-                        suiPath = siiPath + "/" + suiPath;
+                        suiPath = siiDir + "/" + suiPath;
                     }
                     includes.Add(suiPath);
 
@@ -94,7 +94,11 @@ namespace TruckLib.Sii
                     var fileContents = fs.ReadAllText(suiPath);
                     fileContents = Utils.TrimByteOrderMark(fileContents);
                     fileContents = SiiMatUtils.RemoveComments(fileContents);
-                    var suiDir = suiPath[0 .. (suiPath.LastIndexOf('/'))];
+
+                    var lastSlash = suiPath.LastIndexOf('/');
+                    string suiDir = lastSlash != -1 
+                        ? suiPath[0..lastSlash] 
+                        : siiDir;
                     (fileContents, var innerIncludes) = InsertIncludes(fileContents, suiDir, fs, ignoreMissingIncludes);
                     includes.UnionWith(innerIncludes);
                     output.AppendLine(fileContents);
