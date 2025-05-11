@@ -120,7 +120,7 @@ namespace TruckLib.Sii
                 throw new ArgumentException("Not an array entry attribute", nameof(name));
 
             var arrName = match.Groups[1].Value;
-            var hasArrIndex = int.TryParse(match.Groups[2].Value, out int arrIndex);
+            var hasExplicitIndex = int.TryParse(match.Groups[2].Value, out int explicitIndex);
             arrInsertIndex.TryAdd(arrName, 0);
 
             // figure out if this is a fixed-length array entry or a list entry
@@ -132,10 +132,10 @@ namespace TruckLib.Sii
             }
             else
             {
-                isFixedLengthArray = hasArrIndex;
+                isFixedLengthArray = hasExplicitIndex;
                 if (isFixedLengthArray)
                 {
-                    int initSize = arrIndex + 1;
+                    int initSize = explicitIndex + 1;
                     var arr = new dynamic[initSize];
                     AddAttribute(unit, arrName, arr, overrideOnDuplicate);
                 }
@@ -163,27 +163,26 @@ namespace TruckLib.Sii
                     arr = val;
                 }
 
-                if (arr.Length < arrIndex + 1)
+                if (hasExplicitIndex)
                 {
-                    Array.Resize(ref arr, arrIndex + 1);
-                    unit.Attributes[arrName] = arr;
-                }
-
-                if (hasArrIndex)
-                {
-                    arrInsertIndex[arrName] = arrIndex + 1;
+                    if (arr.Length - 1 < explicitIndex)
+                    {
+                        Array.Resize(ref arr, explicitIndex + 1);
+                        unit.Attributes[arrName] = arr;
+                    }
+                    arr[explicitIndex] = value;
+                    arrInsertIndex[arrName] = explicitIndex + 1;
                 }
                 else
                 {
-                    arrIndex = arrInsertIndex[arrName]++;
-                }
-                if (arr.Length <= arrIndex)
-                {
-                    MiscExtensions.Push(arr, value);
-                } 
-                else
-                {
-                    arr[arrIndex] = value;
+                    var idx = arrInsertIndex[arrName];
+                    if (arr.Length - 1 < idx)
+                    {
+                        Array.Resize(ref arr, idx + 1);
+                        unit.Attributes[arrName] = arr;
+                    }
+                    arr[idx] = value;
+                    arrInsertIndex[arrName] += 1;
                 }
             }
             else

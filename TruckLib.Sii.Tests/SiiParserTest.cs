@@ -352,5 +352,23 @@ foo : .bar
             Assert.Equal(340282346638528859811704183484516925440f, sii.Units[0].Attributes["lv_limit"]);
         }
 
+        [Fact]
+        public void FixedLengthArrayWhichLiesAboutNumberOfEntries()
+        {
+            var siiStr = @"SiiNunit { 
+                foo : bar {
+                    words: 2
+                    words[]: ""foo""
+                    words[]: ""bar""
+                    words[]: ""baz""
+                } 
+            }";
+            var sii = SiiParser.DeserializeFromString(siiStr);
+            Assert.Equal(3, sii.Units[0].Attributes["words"].Length);
+            Assert.Equal("foo", sii.Units[0].Attributes["words"][0]);
+            Assert.Equal("bar", sii.Units[0].Attributes["words"][1]);
+            Assert.Equal("baz", sii.Units[0].Attributes["words"][2]);
+        }
+
     }
 }
