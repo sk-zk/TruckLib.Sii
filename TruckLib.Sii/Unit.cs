@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace TruckLib.Sii
     /// <summary>
     /// Represents an SII unit.
     /// </summary>
+    [DebuggerDisplay("{Class, nq} : {Name, nq}")]
     public class Unit
     {
         /// <summary>
@@ -25,8 +27,6 @@ namespace TruckLib.Sii
         /// Attributes of this unit.
         /// </summary>
         public Dictionary<string, dynamic> Attributes { get; set; } = [];
-
-        public override string ToString() => $"{Class} : {Name}";
 
         /// <summary>
         /// Instantiates an empty unit.
