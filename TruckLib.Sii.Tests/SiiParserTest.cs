@@ -370,5 +370,36 @@ foo : .bar
             Assert.Equal("baz", sii.Units[0].Attributes["words"][2]);
         }
 
+        [Fact]
+        public void GluedCurlies()
+        {
+            var siiStr = """
+                SiiNunit {            
+                building_model : bld_model.hello1{
+                    railing_model: true
+                    follow_curve_dir: true
+                    model_desc: "/model/foo/bar.pmd"
+                }building_model : bld_model.hello2{
+                    railing_model: true
+                    follow_curve_dir: true
+                    model_desc: "/model/727/wysi.pmd"
+                }building_model : bld_model.hello3{
+                    single_part: true
+                    model_desc: "/model/aei/ou.pmd"
+                    width: 45
+                    model_size_override: 0.00
+                }
+                }
+                """;
+            var sii = SiiParser.DeserializeFromString(siiStr);
+            Assert.Equal(3, sii.Units.Count);
+            Assert.Equal("bld_model.hello1", sii.Units[0].Name);
+            Assert.Equal("/model/foo/bar.pmd", sii.Units[0].Attributes["model_desc"]);
+            Assert.Equal("bld_model.hello2", sii.Units[1].Name);
+            Assert.Equal("/model/727/wysi.pmd", sii.Units[1].Attributes["model_desc"]);
+            Assert.Equal("bld_model.hello3", sii.Units[2].Name);
+            Assert.Equal("/model/aei/ou.pmd", sii.Units[2].Attributes["model_desc"]);
+        }
+
     }
 }

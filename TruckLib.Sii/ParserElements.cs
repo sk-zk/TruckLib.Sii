@@ -26,6 +26,12 @@ namespace TruckLib.Sii
         internal const string False = "false";
         private static readonly CultureInfo culture = CultureInfo.InvariantCulture;
 
+        internal static readonly Parser<char> OpenCurly =
+            Parse.Char('{').Token();
+
+        internal static readonly Parser<char> CloseCurly =
+            Parse.Char('}').Token();
+
         internal static readonly Parser<dynamic> Token =
             from _ in Parse.Chars(" \t").Many()
             from t in Parse.Chars(TruckLib.Token.CharacterSet).Repeat(1, 12).Text()
@@ -232,7 +238,7 @@ namespace TruckLib.Sii
             Parse.String("::").Once().Token();
 
         internal static readonly Parser<string> KeyText =
-            Parse.AnyChar.Except(Colon).Except(Parse.WhiteSpace).Except(Parse.Char('['))
+            Parse.AnyChar.Except(Colon).Except(Parse.WhiteSpace).Except(CloseCurly).Except(Parse.Char('['))
                 .AtLeastOnce().Text().Token();
 
         internal static readonly Parser<string> KeyArrayIndex =
@@ -274,19 +280,13 @@ namespace TruckLib.Sii
             from v in Value
             select new KeyValuePair<string, dynamic>(k, v);
 
-        internal static readonly Parser<char> OpenCurly =
-            Parse.Char('{').Token();
-
-        internal static readonly Parser<char> CloseCurly =
-            Parse.Char('}').Token();
-
         internal static readonly Parser<string> ClassName =
             Parse.AnyChar
             .Except(Colon).Except(Parse.WhiteSpace)
             .AtLeastOnce().Text().Token();
 
         internal static readonly Parser<string> ClassNameWithNamespace =
-            from p1 in Parse.AnyChar.Except(Parse.WhiteSpace).Except(DoubleColon)
+            from p1 in Parse.AnyChar.Except(Parse.WhiteSpace).Except(DoubleColon).Except(CloseCurly)
                 .AtLeastOnce().Token().Text()
             from _ in DoubleColon
             from p2 in Parse.AnyChar.Except(Parse.WhiteSpace).Except(Colon)
@@ -295,7 +295,7 @@ namespace TruckLib.Sii
 
         internal static readonly Parser<string> UnitName =
             Parse.AnyChar
-            .Except(OpenCurly).Except(Parse.WhiteSpace)
+            .Except(OpenCurly).Except(CloseCurly).Except(Parse.WhiteSpace)
             .AtLeastOnce().Text().Token();
 
         internal static readonly Parser<UnitHeader> SiiUnitHeader =
