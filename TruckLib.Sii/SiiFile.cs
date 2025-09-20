@@ -102,6 +102,9 @@ namespace TruckLib.Sii
         public static SiiFile Load(byte[] sii, string siiDirectory, IFileSystem fs, 
             bool ignoreMissingIncludes)
         {
+            if (sii.Length < 4)
+                throw new ArgumentException("Too short to be a valid SII file", nameof(sii));
+
             var magic = Encoding.ASCII.GetString(sii[0..4]);
             if (magic == "ScsC")
             {
@@ -164,6 +167,9 @@ namespace TruckLib.Sii
         /// or is unsupported, it is returned unchanged.</returns>
         public static byte[] Decode(byte[] sii)
         {
+            if (sii.Length < 4)
+                return sii;
+
             var magic = Encoding.ASCII.GetString(sii[0..4]);
             if (magic == "ScsC")
             {
