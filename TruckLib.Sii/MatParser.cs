@@ -59,11 +59,9 @@ namespace TruckLib.Sii
             }
 
             // convert legacy mat
-            if (secondPass.Attributes.ContainsKey("texture") 
-                && secondPass.Attributes.ContainsKey("texture_name"))
+            if (secondPass.Attributes.TryGetValue("texture", out dynamic legacyTextures)
+                && secondPass.Attributes.TryGetValue("texture_name", out dynamic legacyTextureNames))
             {
-                var legacyTextures = secondPass.Attributes["texture"];
-                var legacyTextureNames = secondPass.Attributes["texture_name"];
                 if (legacyTextures is string)
                 {
                     var texture = new Texture();
