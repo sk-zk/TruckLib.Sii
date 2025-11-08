@@ -6,7 +6,7 @@
 		<Nullable>disable</Nullable>
 		<RootNamespace>TruckLib.Sii</RootNamespace>
 		<Authors>skzk</Authors>
-		<Version>0.1.12.0</Version>
+		<Version>0.1.13.0</Version>
 		<Title>TruckLib.Sii</Title>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryUrl>https://github.com/sk-zk/TruckLib.Sii</RepositoryUrl>
@@ -23,7 +23,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="TruckLib.Core" Version="0.2.0" />
+	  <PackageReference Include="TruckLib.Core" Version="0.2.1" />
 	</ItemGroup>
 
 	<ItemGroup>
