@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
 namespace TruckLib.Sii
@@ -63,7 +62,7 @@ namespace TruckLib.Sii
         /// If false, an exception will be thrown.</param>
         /// <returns>A <see>SiiFile</see> object.</returns>
         public static SiiFile Load(string sii, string siiDirectory, IFileSystem fs, bool ignoreMissingIncludes) =>
-            SiiParser.DeserializeFromString(sii, siiDirectory, fs, false);
+            SiiParser.DeserializeFromString(sii, siiDirectory, fs, ignoreMissingIncludes);
 
         /// <summary>
         /// Deserializes a SII file.
