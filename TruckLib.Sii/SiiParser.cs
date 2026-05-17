@@ -46,10 +46,12 @@ namespace TruckLib.Sii
         }
 
         private static (string sii, HashSet<string> includes) InsertIncludes(string sii, string siiDir, 
-            IFileSystem fs, bool ignoreMissingIncludes)
+            IFileSystem fs, bool ignoreMissingIncludes, HashSet<string> parents = null)
         {
             var output = new StringBuilder();
             var includes = new HashSet<string>();
+
+            parents ??= [];
 
             using var reader = new StringReader(sii);
             string line;
@@ -77,6 +79,12 @@ namespace TruckLib.Sii
                     }
                     includes.Add(suiPath);
 
+                    if (parents.Contains(suiPath))
+                    {
+                        // Disallow recursive includes
+                        continue;
+                    }
+
                     if (!fs.FileExists(suiPath))
                     {
                         if (ignoreMissingIncludes)
@@ -96,7 +104,9 @@ namespace TruckLib.Sii
                     string suiDir = lastSlash != -1 
                         ? suiPath[0..lastSlash] 
                         : siiDir;
-                    (fileContents, var innerIncludes) = InsertIncludes(fileContents, suiDir, fs, ignoreMissingIncludes);
+                    (fileContents, var innerIncludes) = InsertIncludes(
+                        fileContents, suiDir, fs, ignoreMissingIncludes, 
+                        [.. parents, suiPath]);
                     includes.UnionWith(innerIncludes);
                     output.AppendLine(fileContents);
                 }

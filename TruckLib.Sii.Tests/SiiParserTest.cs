@@ -201,25 +201,27 @@ namespace TruckLib.Sii.Tests
             unit.Attributes.Add("link_ptr", new LinkPointer("baz"));
 
             var actual = sii.Serialize("    ");
-            var expected = @"SiiNunit
-{
+            var expected = """
+                SiiNunit
+                {
 
-foo : .bar
-{
-    int: 42
-    float: 13.12
-    string: ""Hello there""
-    float3: (1.0, 2.0, 3.0)
-    int3: (1, 2, 3)
-    bool: true
-    quaternion: (4.0; 1.0, 2.0, 3.0)
-    placement: (1.0, 2.0, 3.0) (4.0; 1.0, 2.0, 3.0)
-    token: default
-    link_ptr: baz
-}
+                foo : .bar
+                {
+                    int: 42
+                    float: 13.12
+                    string: "Hello there"
+                    float3: (1.0, 2.0, 3.0)
+                    int3: (1, 2, 3)
+                    bool: true
+                    quaternion: (4.0; 1.0, 2.0, 3.0)
+                    placement: (1.0, 2.0, 3.0) (4.0; 1.0, 2.0, 3.0)
+                    token: default
+                    link_ptr: baz
+                }
 
-}
-";
+                }
+
+                """;
             Assert.Equal(expected.Replace("\r", ""), actual.Replace("\r", ""));
         }
 
@@ -401,5 +403,11 @@ foo : .bar
             Assert.Equal("/model/aei/ou.pmd", sii.Units[2].Attributes["model_desc"]);
         }
 
+        [Fact]
+        public void RecursiveIncludesDontThrow()
+        {
+            var ex = Record.Exception(() => SiiFile.Open("Data/SiiParserTest/RecursiveIncludes/one.sii"));
+            Assert.Null(ex);
+        }
     }
 }

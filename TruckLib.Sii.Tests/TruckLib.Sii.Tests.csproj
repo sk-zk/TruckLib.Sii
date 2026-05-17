@@ -60,6 +60,12 @@
     <None Update="Data\sample.sii">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Data\SiiParserTest\RecursiveIncludes\one.sii">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\SiiParserTest\RecursiveIncludes\two.sii">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\unencrypted.sii">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
