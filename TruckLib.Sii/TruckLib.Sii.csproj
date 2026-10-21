@@ -6,7 +6,7 @@
 		<Nullable>disable</Nullable>
 		<RootNamespace>TruckLib.Sii</RootNamespace>
 		<Authors>skzk</Authors>
-		<Version>0.2.1</Version>
+		<Version>0.2.2</Version>
 		<Title>TruckLib.Sii</Title>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<RepositoryUrl>https://github.com/sk-zk/TruckLib.Sii</RepositoryUrl>
@@ -23,11 +23,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="TruckLib.Core" Version="0.3.0" />
+	  <PackageReference Include="TruckLib.Core" Version="0.3.1" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.402" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>
