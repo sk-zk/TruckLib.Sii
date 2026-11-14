@@ -32,287 +32,151 @@ namespace TruckLib.Sii
         internal static readonly Parser<char> CloseCurly =
             Parse.Char('}').Token();
 
-        internal static readonly Parser<dynamic> Token =
-            from _ in Parse.Chars(" \t").Many()
-            from t in Parse.Chars(TruckLib.Token.CharacterSet).Repeat(1, 12).Text()
-            from __ in Parse.Chars(" \t").Many()
-            from ___ in Parse.LineTerminator
-            select (dynamic)new Token(t);
+        // A line terminator can close a string, as covered by
+        // ParseStringWithMissingEndQuote.
+        internal static readonly Parser<char> StringDelimiter =
+            Parse.Char(StringDelimiterChar).Token()
+            .Or(Parse.LineTerminator.Return('"'));
 
-        internal static readonly Parser<IEnumerable<char>> StringDelimiter =
-            Parse.Char(StringDelimiterChar).Once().Token().Or(Parse.LineTerminator);
-
-        internal static readonly Parser<dynamic> DelimitedString =
-            from _ in StringDelimiter
-            from s in Parse.AnyChar.Except(StringDelimiter).Many().Text()
+        internal static readonly Parser<object> DelimitedString =
+            from _ in Parse.Char(StringDelimiterChar).Token()
+            from s in Parse.Char(c => c is not ('"' or '\r' or '\n'), "string content").Many().Text()
             from __ in StringDelimiter
-            select (dynamic)s;
+            select (object)s.TrimEnd();
 
+        private static readonly Parser<string> Digits = Parse.Char(c => c is >= '0' and <= '9', "digit").AtLeastOnce().Text();
         internal static readonly Parser<IOption<char>> Sign =
             Parse.Chars("+-").Optional().Token();
 
-        internal static readonly Parser<IEnumerable<char>> ExponentPart =
+        internal static readonly Parser<string> ExponentPart =
             from _ in Parse.Char('e')
             from s in Sign
-            from d in Parse.Numeric.AtLeastOnce().Text()
-            select "e" + (s.IsDefined ? s.Get() : "") + d;
-
-        internal static readonly Parser<string> FloatWithLeadingDigits =
-            from d1 in Parse.Digit.AtLeastOnce().Text()
-            from d2 in DotAndFractionalDigits.Optional()
-            select d1 + d2.GetOrDefault();
+            from d in Digits
+            select "e" + (s.IsDefined ? s.Get().ToString() : "") + d;
 
         internal static readonly Parser<string> DotAndFractionalDigits =
-            from dot in Parse.Char('.').Once()
-            from d in Parse.Chars("0123456789").Many().Text()
+            from dot in Parse.Char('.')
+            from d in Parse.Char(c => c is >= '0' and <= '9', "digit").Many().Text()
             select '.' + d;
 
-        internal static readonly Parser<dynamic> Float =
-            from s in Sign
-            from n in FloatWithLeadingDigits
-            from e in ExponentPart.Optional()
-            from _ in Parse.Char('f').Optional()
-            select (dynamic)float.Parse(
-                s.GetOrElse(' ') + 
-                n +
-                e.GetOrDefault(),
-                CultureInfo.InvariantCulture);
+        private readonly record struct Number(object Integer, float Floating, bool HasFloat);
+        // A number and a tuple are each read once, rather than trying every type
+        // and vector dimension from the same position.
+        private static readonly Parser<Number> Decimal =
+            from sign in Sign
+            from digits in Digits
+            from fraction in DotAndFractionalDigits.Optional()
+            from exponent in ExponentPart.Optional()
+            from suffix in Parse.Char('f').Optional()
+            select MakeNumber((sign.IsDefined ? sign.Get().ToString() : "") + digits
+                + fraction.GetOrDefault() + exponent.GetOrDefault(),
+                fraction.IsDefined || exponent.IsDefined || suffix.IsDefined);
+        private static readonly Parser<Number> HexInteger =
+            from prefix in Parse.String("0x")
+            from digits in Parse.Char(IsHex, "hex digit").AtLeastOnce().Text()
+            select new Number(ParseInt(digits, NumberStyles.HexNumber), 0, false);
+        private static readonly Parser<Number> FloatInHexNotation =
+            from ampersand in Parse.Char('&')
+            from digits in Parse.Char(IsHex, "hex digit").Repeat(8).Text()
+            select new Number(null, BitConverter.Int32BitsToSingle(int.Parse(digits, NumberStyles.HexNumber, culture)), true);
+        private static readonly Parser<Number> Numeric = input =>
+            !input.AtEnd && input.Current == '&' ? FloatInHexNotation(input)
+            : input.Source.AsSpan(input.Position).StartsWith("0x".AsSpan(), StringComparison.Ordinal)
+                ? HexInteger(input) : Decimal(input);
+        private static readonly Parser<string> HorizontalSpace = Parse.Chars(" \t").Many().Text();
+        private static readonly Parser<object> ScalarNumber =
+            from number in Numeric
+            from space in HorizontalSpace
+            from line in Parse.LineTerminator
+            select number.Integer ?? (object)number.Floating;
 
-        internal static readonly Parser<dynamic> IndividualFloat =
-            from _ in Parse.Chars(" \t").Many()
-            from n in Float
-            from __ in Parse.Chars(" \t").Many()
-            from ___ in Parse.LineTerminator
-            select n;
-
-        internal static readonly Parser<dynamic> FloatInHexNotation =
-            from _ in Parse.Char('&')
-            from n in Parse.Chars("0123456789abcdefABCDEF").Repeat(8).Text()
-            select (dynamic)BitConverter.Int32BitsToSingle(int.Parse(n, NumberStyles.HexNumber));
-
-        internal static readonly Parser<char> TupleOpen =
-            Parse.Char(TupleOpenChar).Token();
-
-        internal static readonly Parser<char> TupleClose =
-            Parse.Char(TupleCloseChar).Token();
-
-        internal static readonly Parser<dynamic> FloatTupleValue =
-            from n in Float.XOr(FloatInHexNotation)
-            from _ in Parse.Char(TupleSeparatorChar).Optional().Token()
-            select n;
-
-        internal static readonly Parser<dynamic> FloatVector2 =
-            from _ in TupleOpen
-            from x in FloatTupleValue
-            from y in FloatTupleValue
-            from __ in TupleClose
-            select (dynamic)new Vector2(x, y);
-
-        internal static readonly Parser<dynamic> FloatVector3 =
-            from _ in TupleOpen
-            from x in FloatTupleValue
-            from y in FloatTupleValue
-            from z in FloatTupleValue
-            from __ in TupleClose
-            select (dynamic)new Vector3(x, y, z);
-
-        internal static readonly Parser<dynamic> MatFloatVector2 =
-            from _ in Parse.Char(MatTupleOpenChar).Token()
-            from x in FloatTupleValue
-            from y in FloatTupleValue
-            from __ in Parse.Char(MatTupleCloseChar).Token()
-            select (dynamic)new Vector2(x, y);
-
-        internal static readonly Parser<dynamic> MatFloatVector3 =
-            from _ in Parse.Char(MatTupleOpenChar).Token()
-            from x in FloatTupleValue
-            from y in FloatTupleValue
-            from z in FloatTupleValue
-            from __ in Parse.Char(MatTupleCloseChar).Token()
-            select (dynamic)new Vector3(x, y, z);
-
-        internal static readonly Parser<dynamic> MatFloatVector4 =
-            from _ in Parse.Char(MatTupleOpenChar).Token()
-            from x in FloatTupleValue
-            from y in FloatTupleValue
-            from z in FloatTupleValue
-            from a in FloatTupleValue
-            from __ in Parse.Char(MatTupleCloseChar).Token()
-            select (dynamic)new Vector4(x, y, z, a);
-
-        internal static readonly Parser<dynamic> Integer =
-            from s in Sign
-            from n in Parse.Chars("0123456789").AtLeastOnce().Text()
-            from _ in Parse.Not(Parse.Chars('.'))
-            select ParseInt(s.GetOrElse(' ') + n);
-
-        internal static readonly Parser<dynamic> HexInteger =
-            from h in Parse.String("0x").Token().Text()
-            from n in Parse.Chars("0123456789ABCDEFabcdef").AtLeastOnce().Text()
-            select ParseHexInt(n);
-
-        internal static readonly Parser<dynamic> IntegerOrHexInteger =
-            HexInteger.Or(Integer);
-
-        internal static readonly Parser<dynamic> IndividualInteger =
-            from _ in Parse.Chars(" \t").Many()
-            from n in IntegerOrHexInteger
-            from __ in Parse.Chars(" \t").Many()
-            from ___ in Parse.LineTerminator
-            select n;
-
-        internal static readonly Parser<dynamic> IntegerTupleValue =
-            from n in IntegerOrHexInteger
-            from _ in Parse.Char(TupleSeparatorChar).Optional().Token()
-            select n;
-
-        internal static readonly Parser<dynamic> IntTuple2 =
-            from _ in TupleOpen
-            from x in IntegerTupleValue
-            from y in IntegerTupleValue
-            from __ in TupleClose
-            select (dynamic)(x, y);
-
-        internal static readonly Parser<dynamic> IntTuple3 =
-            from _ in TupleOpen
-            from x in IntegerTupleValue
-            from y in IntegerTupleValue
-            from z in IntegerTupleValue
-            from __ in TupleClose
-            select (dynamic)(x, y, z);
-
-        internal static readonly Parser<dynamic> IntTuple4 =
-            from _ in TupleOpen
-            from x in IntegerTupleValue
-            from y in IntegerTupleValue
-            from z in IntegerTupleValue
-            from w in IntegerTupleValue
-            from __ in TupleClose
-            select (dynamic)(x, y, z, w);
-
-        internal static readonly Parser<dynamic> Quaternion =
-            from _ in TupleOpen
-            from w in FloatTupleValue
-            from x in FloatTupleValue
-            from y in FloatTupleValue
-            from z in FloatTupleValue
-            from __ in TupleClose
-            select (dynamic)new Quaternion(x, y, z, w);
-
-        internal static readonly Parser<dynamic> QuaternionWValue =
-            from n in Float.XOr(FloatInHexNotation)
-            from _ in Parse.Char(QuaternionWSeparatorChar).Token()
-            select n;
-
-        internal static readonly Parser<dynamic> QuaternionWithSemicolon =
-            from _ in TupleOpen
-            from w in QuaternionWValue
-            from x in FloatTupleValue
-            from y in FloatTupleValue
-            from z in FloatTupleValue
-            from __ in TupleClose
-            select (dynamic)new Quaternion(x, y, z, w);
-
-        internal static readonly Parser<dynamic> Placement =
-            from v in FloatVector3
-            from q in QuaternionWithSemicolon
-            select (dynamic)new Placement(v, q);
-
-        internal static readonly Parser<dynamic> Boolean =
-        Parse.String(True).Or(Parse.String(False)).Token().Text()
-            .Select(b => (dynamic)bool.Parse(b));
-
-        internal static readonly Parser<dynamic> LinkPointer =
-        Parse.AnyChar.Except(Parse.WhiteSpace).AtLeastOnce().Text().Token()
-            .Select(x => (dynamic)new LinkPointer(x));
-
-        internal static readonly Parser<dynamic> OwnerPointer =
-            from dot in Parse.Char('.')
-            from rest in LinkPointer
-            select (dynamic)new OwnerPointer(dot + rest.Value);
-
-        internal static readonly Parser<IEnumerable<char>> Colon =
-            Parse.Char(':').Once().Token();
-
-        internal static readonly Parser<IEnumerable<IEnumerable<char>>> DoubleColon =
-            Parse.String("::").Once().Token();
+        private readonly record struct Component(Number Number, IOption<char> Separator);
+        private readonly record struct TupleValue(Component[] Components, bool Mat)
+        {
+            internal bool Semicolon => Components.Any(c => c.Separator.IsDefined && c.Separator.Get() == ';');
+            internal bool HasFloat => Components.All(c => c.Number.HasFloat);
+        }
+        private static readonly Parser<Component> TupleComponent =
+            from value in Numeric.Token()
+            from separator in Parse.Chars(",;").Optional().Token()
+            select new Component(value, separator);
+        private static readonly Parser<TupleValue> RoundTuple =
+            from open in Parse.Char(TupleOpenChar).Token()
+            from values in TupleComponent.Many()
+            from close in Parse.Char(TupleCloseChar).Token()
+            select new TupleValue(values.ToArray(), false);
+        private static readonly Parser<TupleValue> MatTuple =
+            from open in Parse.Char(MatTupleOpenChar).Token()
+            from values in TupleComponent.Many()
+            from close in Parse.Char(MatTupleCloseChar).Token()
+            select new TupleValue(values.ToArray(), true);
+        private static readonly Parser<TupleValue> Rotation = RoundTuple.Where(t => t.Components.Length == 4 && t.Semicolon && t.HasFloat);
+        private static readonly Parser<TupleValue?> OptionalRotation = Rotation.Optional().Select(o => o.IsDefined ? (TupleValue?)o.Get() : null);
+        private static readonly Parser<object> RoundValue =
+            from tuple in RoundTuple
+            from rotation in (tuple.Components.Length == 3 && !tuple.Semicolon && tuple.HasFloat
+                ? OptionalRotation : Parse.Return<TupleValue?>(null))
+            select rotation.HasValue ? new Placement(ToVector3(tuple), ToQuaternion(rotation.Value)) : ToValue(tuple);
+        private static readonly Parser<object> MatValue = MatTuple.Select(ToValue);
+        private static readonly Parser<string> Word = Parse.Char(c => !char.IsWhiteSpace(c), "reference").AtLeastOnce().Text();
+        private static readonly Parser<object> WordValue =
+            from word in Word
+            from line in (from space in HorizontalSpace
+            from ending in Parse.LineTerminator select true).Optional()
+            select word == "true" ? (object)true : word == "false" ? false
+                : line.IsDefined && word.Length <= 12 && word.All(c => TruckLib.Token.CharacterSet.Contains(c)) ? new Token(word)
+                : word[0] == '.' ? new OwnerPointer(word) : new LinkPointer(word);
+        internal static readonly Parser<char> Colon =
+            Parse.Char(':').Token();
 
         internal static readonly Parser<string> KeyText =
-            Parse.AnyChar.Except(Colon).Except(Parse.WhiteSpace).Except(CloseCurly).Except(Parse.Char('['))
-                .AtLeastOnce().Text().Token();
+            Parse.Char(c => !char.IsWhiteSpace(c) && c is not (':' or '}' or '['), "key").AtLeastOnce().Text().Token();
 
         internal static readonly Parser<string> KeyArrayIndex =
             from _ in Parse.Char('[').Token()
-            from val in Parse.Chars("0123456789").Many().Text()
+            from val in Parse.Char(c => c is >= '0' and <= '9', "digit").Many().Text()
             from __ in Parse.Char(']').Token()
             select $"[{val}]";
 
-        internal static readonly Parser<string> Key =
-            from t in KeyText.Token()
-            from i in KeyArrayIndex.Text().Token().Optional()
-            select t + i.GetOrElse("");
-
-        internal static readonly Parser<dynamic> Value =
-            from v in Placement
-                .Or(IntTuple2)
-                .Or(IntTuple3)
-                .Or(IntTuple4)
-                .Or(FloatVector2)
-                .Or(FloatVector3)
-                .Or(MatFloatVector2)
-                .Or(MatFloatVector3)
-                .Or(MatFloatVector4)
-                .Or(Quaternion)
-                .Or(QuaternionWithSemicolon)
-                .Or(IndividualInteger)
-                .Or(IndividualFloat)
-                .Or(FloatInHexNotation)
-                .Or(DelimitedString)
-                .Or(Boolean)
-                .Or(Token)
-                .Or(OwnerPointer)
-                .Or(LinkPointer)
-            select v;
-
+        private static readonly Parser<object> NumericOrReference = ScalarNumber.Or(WordValue);
+        private static readonly Parser<object> HexFloatValue = FloatInHexNotation.Select(n => (object)n.Floating);
+        internal static readonly Parser<object> Value = input =>
+        {
+            if (input.AtEnd) return WordValue(input);
+            return input.Current switch
+            {
+                '"' => DelimitedString(input), '(' => RoundValue(input), '{' => MatValue(input), '&' => HexFloatValue(input),
+                >= '0' and <= '9' or '+' or '-' => NumericOrReference(input), _ => WordValue(input)
+            };
+        };
         internal static readonly Parser<KeyValuePair<string, dynamic>> Pair =
-            from k in Key
+            from k in KeyText
+            from index in KeyArrayIndex.Optional()
             from _ in Colon
-            from v in Value
-            select new KeyValuePair<string, dynamic>(k, v);
+            from v in Value.Token()
+            select new KeyValuePair<string, dynamic>(k + index.GetOrDefault(), v);
 
         internal static readonly Parser<string> ClassName =
-            Parse.AnyChar
-            .Except(Colon).Except(Parse.WhiteSpace)
-            .AtLeastOnce().Text().Token();
+            Parse.Char(c => !char.IsWhiteSpace(c) && c is not (':' or '}'), "class name").AtLeastOnce().Text().Token();
 
-        internal static readonly Parser<string> ClassNameWithNamespace =
-            from p1 in Parse.AnyChar.Except(Parse.WhiteSpace).Except(DoubleColon).Except(CloseCurly)
-                .AtLeastOnce().Token().Text()
-            from _ in DoubleColon
-            from p2 in Parse.AnyChar.Except(Parse.WhiteSpace).Except(Colon)
-                .AtLeastOnce().Token().Text()
-            select p1 + "::" + p2;
-
+        private static readonly Parser<string> ClassNameSuffix =
+            from separator in Parse.String("::").Token()
+            from name in ClassName select "::" + name;
         internal static readonly Parser<string> UnitName =
-            Parse.AnyChar
-            .Except(OpenCurly).Except(CloseCurly).Except(Parse.WhiteSpace)
-            .AtLeastOnce().Text().Token();
-
-        internal static readonly Parser<UnitHeader> SiiUnitHeader =
-            from c in ClassNameWithNamespace.Or(ClassName)
-            from _ in Colon
-            from u in UnitName
-            select new UnitHeader(c, u);
+            Parse.Char(c => !char.IsWhiteSpace(c) && c is not ('{' or '}'), "unit name").AtLeastOnce().Text().Token();
 
         internal static readonly Parser<FirstPassUnit> SiiUnit =
-            from h in SiiUnitHeader.Token()
-            from _ in OpenCurly
-            from p in Pair.Many()
-            from __ in CloseCurly
-            select new FirstPassUnit(h.ClassName, h.UnitName, p.ToList());
+            from className in ClassName
+            from ns in ClassNameSuffix.Optional()
+            from colon in Colon
+            from name in UnitName
+            from open in OpenCurly
+            from pairs in Pair.Many()
+            from close in CloseCurly
+            select new FirstPassUnit(className + ns.GetOrDefault(), name, pairs.ToList());
 
         internal static readonly Parser<List<FirstPassUnit>> SiiUnits =
-            SiiUnit.Token().Many().Select(x => x.ToList());
+            SiiUnit.Many().Select(x => x.ToList());
 
         internal static readonly Parser<List<FirstPassUnit>> Sii =
             from header in Parse.String(SiiHeader).Token()
@@ -321,10 +185,36 @@ namespace TruckLib.Sii
             from cc in CloseCurly.Optional()
             select u;
 
+        private static bool IsHex(char c) => c is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F';
+
+        private static Number MakeNumber(string text, bool real) => new(real ? null : ParseInt(text, NumberStyles.Integer), float.Parse(text, NumberStyles.Float, culture), true);
+        private static float F(TupleValue t, int i) => t.Components[i].Number.Floating;
+        private static Vector3 ToVector3(TupleValue t) => new(F(t, 0), F(t, 1), F(t, 2));
+        private static Quaternion ToQuaternion(TupleValue t) => new(F(t, 1), F(t, 2), F(t, 3), F(t, 0));
+        private static object ToValue(TupleValue t)
+        {
+            var v = t.Components;
+            if (!t.Mat && !t.Semicolon && v.All(c => c.Number.Integer is not null))
+                return v.Length switch
+                {
+                    2 => (v[0].Number.Integer, v[1].Number.Integer),
+                    3 => (v[0].Number.Integer, v[1].Number.Integer, v[2].Number.Integer),
+                    4 => (v[0].Number.Integer, v[1].Number.Integer, v[2].Number.Integer, v[3].Number.Integer),
+                    _ => throw new FormatException("Expected two to four tuple components.")
+                };
+            if (!t.HasFloat) throw new FormatException("Expected floating-point components.");
+            return v.Length switch
+            {
+                2 => new Vector2(F(t, 0), F(t, 1)), 3 => ToVector3(t),
+                4 when t.Mat => new Vector4(F(t, 0), F(t, 1), F(t, 2), F(t, 3)),
+                4 => ToQuaternion(t), _ => throw new FormatException("Expected two to four tuple components.")
+            };
+        }
+
         internal static readonly Parser<UnitHeader> MatUnitHeader =
             from c in ClassName
             from _ in Colon
-            from u in DelimitedString
+            from u in DelimitedString.Select(value => (string)value)
             select new UnitHeader(c, u);
 
         internal static readonly Parser<KeyValuePair<string, dynamic>> MatUnitValue =
@@ -342,10 +232,8 @@ namespace TruckLib.Sii
 
         internal static readonly Parser<FirstPassUnit> Mat = MatUnit.Select(x => x);
 
-        internal static dynamic ParseInt(string n, NumberStyles numberStyles = NumberStyles.Integer)
+        internal static object ParseInt(string n, NumberStyles numberStyles = NumberStyles.Integer)
         {
-            var culture = CultureInfo.InvariantCulture;
-
             if (int.TryParse(n, numberStyles, culture, out int intResult))
             {
                 return intResult;
@@ -358,11 +246,9 @@ namespace TruckLib.Sii
             {
                 return ulongResult;
             }
-            throw new ArgumentException("Unable to parse", nameof(n));
+            // An integer-looking literal can be a valid float placement component.
+            return null;
         }
-
-        internal static dynamic ParseHexInt(string n) => 
-            ParseInt(n, NumberStyles.HexNumber);
 
         internal static void SerializeAttributes(StringBuilder sb, Dictionary<string, dynamic> attributes, 
             string indentation, bool isMat = false)
