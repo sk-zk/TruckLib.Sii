@@ -27,26 +27,26 @@ namespace TruckLib.Sii
         private static readonly CultureInfo culture = CultureInfo.InvariantCulture;
 
         internal static readonly Parser<char> OpenCurly =
-            Parse.Char('{').Token();
+            Parse.Char('{').Lexeme();
 
         internal static readonly Parser<char> CloseCurly =
-            Parse.Char('}').Token();
+            Parse.Char('}').Lexeme();
 
         // A line terminator can close a string, as covered by
         // ParseStringWithMissingEndQuote.
         internal static readonly Parser<char> StringDelimiter =
-            Parse.Char(StringDelimiterChar).Token()
+            Parse.Char(StringDelimiterChar).Lexeme()
             .Or(Parse.LineTerminator.Return('"'));
 
         internal static readonly Parser<object> DelimitedString =
-            from _ in Parse.Char(StringDelimiterChar).Token()
-            from s in Parse.Char(c => c is not ('"' or '\r' or '\n'), "string content").Many().Text()
+            from _ in Parse.Char(StringDelimiterChar).Lexeme()
+            from s in Scan(c => c is not ('"' or '\r' or '\n'), "string content", minimum: 0)
             from __ in StringDelimiter
             select (object)s.TrimEnd();
 
-        private static readonly Parser<string> Digits = Parse.Char(c => c is >= '0' and <= '9', "digit").AtLeastOnce().Text();
+        private static readonly Parser<string> Digits = Scan(c => c is >= '0' and <= '9', "digit");
         internal static readonly Parser<IOption<char>> Sign =
-            Parse.Chars("+-").Optional().Token();
+            Parse.Chars("+-").Optional().Lexeme();
 
         internal static readonly Parser<string> ExponentPart =
             from _ in Parse.Char('e')
@@ -56,7 +56,7 @@ namespace TruckLib.Sii
 
         internal static readonly Parser<string> DotAndFractionalDigits =
             from dot in Parse.Char('.')
-            from d in Parse.Char(c => c is >= '0' and <= '9', "digit").Many().Text()
+            from d in Scan(c => c is >= '0' and <= '9', "digit", minimum: 0)
             select '.' + d;
 
         private readonly record struct Number(object Integer, float Floating, bool HasFloat);
@@ -73,17 +73,17 @@ namespace TruckLib.Sii
                 fraction.IsDefined || exponent.IsDefined || suffix.IsDefined);
         private static readonly Parser<Number> HexInteger =
             from prefix in Parse.String("0x")
-            from digits in Parse.Char(IsHex, "hex digit").AtLeastOnce().Text()
+            from digits in Scan(IsHex, "hex digit")
             select new Number(ParseInt(digits, NumberStyles.HexNumber), 0, false);
         private static readonly Parser<Number> FloatInHexNotation =
             from ampersand in Parse.Char('&')
-            from digits in Parse.Char(IsHex, "hex digit").Repeat(8).Text()
+            from digits in Scan(IsHex, "hex digit", minimum: 8, maximum: 8)
             select new Number(null, BitConverter.Int32BitsToSingle(int.Parse(digits, NumberStyles.HexNumber, culture)), true);
         private static readonly Parser<Number> Numeric = input =>
             !input.AtEnd && input.Current == '&' ? FloatInHexNotation(input)
             : input.Source.AsSpan(input.Position).StartsWith("0x".AsSpan(), StringComparison.Ordinal)
                 ? HexInteger(input) : Decimal(input);
-        private static readonly Parser<string> HorizontalSpace = Parse.Chars(" \t").Many().Text();
+        private static readonly Parser<string> HorizontalSpace = Scan(c => c is ' ' or '\t', "horizontal whitespace", minimum: 0);
         private static readonly Parser<object> ScalarNumber =
             from number in Numeric
             from space in HorizontalSpace
@@ -97,18 +97,18 @@ namespace TruckLib.Sii
             internal bool HasFloat => Components.All(c => c.Number.HasFloat);
         }
         private static readonly Parser<Component> TupleComponent =
-            from value in Numeric.Token()
-            from separator in Parse.Chars(",;").Optional().Token()
+            from value in Numeric.Lexeme()
+            from separator in Parse.Chars(",;").Optional().Lexeme()
             select new Component(value, separator);
         private static readonly Parser<TupleValue> RoundTuple =
-            from open in Parse.Char(TupleOpenChar).Token()
+            from open in Parse.Char(TupleOpenChar).Lexeme()
             from values in TupleComponent.Many()
-            from close in Parse.Char(TupleCloseChar).Token()
+            from close in Parse.Char(TupleCloseChar).Lexeme()
             select new TupleValue(values.ToArray(), false);
         private static readonly Parser<TupleValue> MatTuple =
-            from open in Parse.Char(MatTupleOpenChar).Token()
+            from open in Parse.Char(MatTupleOpenChar).Lexeme()
             from values in TupleComponent.Many()
-            from close in Parse.Char(MatTupleCloseChar).Token()
+            from close in Parse.Char(MatTupleCloseChar).Lexeme()
             select new TupleValue(values.ToArray(), true);
         private static readonly Parser<TupleValue> Rotation = RoundTuple.Where(t => t.Components.Length == 4 && t.Semicolon && t.HasFloat);
         private static readonly Parser<TupleValue?> OptionalRotation = Rotation.Optional().Select(o => o.IsDefined ? (TupleValue?)o.Get() : null);
@@ -118,7 +118,7 @@ namespace TruckLib.Sii
                 ? OptionalRotation : Parse.Return<TupleValue?>(null))
             select rotation.HasValue ? new Placement(ToVector3(tuple), ToQuaternion(rotation.Value)) : ToValue(tuple);
         private static readonly Parser<object> MatValue = MatTuple.Select(ToValue);
-        private static readonly Parser<string> Word = Parse.Char(c => !char.IsWhiteSpace(c), "reference").AtLeastOnce().Text();
+        private static readonly Parser<string> Word = Scan(c => !char.IsWhiteSpace(c), "reference");
         private static readonly Parser<object> WordValue =
             from word in Word
             from line in (from space in HorizontalSpace
@@ -127,15 +127,14 @@ namespace TruckLib.Sii
                 : line.IsDefined && word.Length <= 12 && word.All(c => TruckLib.Token.CharacterSet.Contains(c)) ? new Token(word)
                 : word[0] == '.' ? new OwnerPointer(word) : new LinkPointer(word);
         internal static readonly Parser<char> Colon =
-            Parse.Char(':').Token();
+            Parse.Char(':').Lexeme();
 
-        internal static readonly Parser<string> KeyText =
-            Parse.Char(c => !char.IsWhiteSpace(c) && c is not (':' or '}' or '['), "key").AtLeastOnce().Text().Token();
+        internal static readonly Parser<string> KeyText = Scan(c => !char.IsWhiteSpace(c) && c is not (':' or '}' or '['), "key").Lexeme();
 
         internal static readonly Parser<string> KeyArrayIndex =
-            from _ in Parse.Char('[').Token()
-            from val in Parse.Char(c => c is >= '0' and <= '9', "digit").Many().Text()
-            from __ in Parse.Char(']').Token()
+            from _ in Parse.Char('[').Lexeme()
+            from val in Scan(c => c is >= '0' and <= '9', "digit", minimum: 0)
+            from __ in Parse.Char(']').Lexeme()
             select $"[{val}]";
 
         private static readonly Parser<object> NumericOrReference = ScalarNumber.Or(WordValue);
@@ -153,17 +152,15 @@ namespace TruckLib.Sii
             from k in KeyText
             from index in KeyArrayIndex.Optional()
             from _ in Colon
-            from v in Value.Token()
+            from v in Value.Lexeme()
             select new KeyValuePair<string, dynamic>(k + index.GetOrDefault(), v);
 
-        internal static readonly Parser<string> ClassName =
-            Parse.Char(c => !char.IsWhiteSpace(c) && c is not (':' or '}'), "class name").AtLeastOnce().Text().Token();
+        internal static readonly Parser<string> ClassName = Scan(c => !char.IsWhiteSpace(c) && c is not (':' or '}'), "class name").Lexeme();
 
         private static readonly Parser<string> ClassNameSuffix =
-            from separator in Parse.String("::").Token()
+            from separator in Parse.String("::").Lexeme()
             from name in ClassName select "::" + name;
-        internal static readonly Parser<string> UnitName =
-            Parse.Char(c => !char.IsWhiteSpace(c) && c is not ('{' or '}'), "unit name").AtLeastOnce().Text().Token();
+        internal static readonly Parser<string> UnitName = Scan(c => !char.IsWhiteSpace(c) && c is not ('{' or '}'), "unit name").Lexeme();
 
         internal static readonly Parser<FirstPassUnit> SiiUnit =
             from className in ClassName
@@ -179,13 +176,45 @@ namespace TruckLib.Sii
             SiiUnit.Many().Select(x => x.ToList());
 
         internal static readonly Parser<List<FirstPassUnit>> Sii =
-            from header in Parse.String(SiiHeader).Token()
+            from header in Parse.String(SiiHeader).Lexeme()
             from oc in OpenCurly
             from u in SiiUnits
             from cc in CloseCurly.Optional()
             select u;
 
+        // Same leading/trailing whitespace policy as Sprache Token(), with no
+        // result/list allocation for every whitespace character.
+        private static Parser<T> Lexeme<T>(this Parser<T> parser) => input =>
+        {
+            var parsed = parser(SkipSpace(input));
+            return parsed.WasSuccessful
+                ? Result.Success(parsed.Value, SkipSpace(parsed.Remainder)) : parsed;
+        };
+
+        private static IInput SkipSpace(IInput input)
+        {
+            while (!input.AtEnd && char.IsWhiteSpace(input.Current)) input = input.Advance();
+            return input;
+        }
+
         private static bool IsHex(char c) => c is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F';
+
+        // Only a lexical primitive: no knowledge of units, attributes or values.
+        // Advance and Result are the framework's own input/result contracts.
+        private static Parser<string> Scan(Predicate<char> accepts, string description,
+            int minimum = 1, int maximum = int.MaxValue) => input =>
+        {
+            var rest = input;
+            int length = 0;
+            while (!rest.AtEnd && length < maximum && accepts(rest.Current))
+            {
+                rest = rest.Advance();
+                length++;
+            }
+            return length < minimum
+                ? Result.Failure<string>(rest, "Expected " + description, new[] { description })
+                : Result.Success(input.Source.Substring(input.Position, length), rest);
+        };
 
         private static Number MakeNumber(string text, bool real) => new(real ? null : ParseInt(text, NumberStyles.Integer), float.Parse(text, NumberStyles.Float, culture), true);
         private static float F(TupleValue t, int i) => t.Components[i].Number.Floating;
